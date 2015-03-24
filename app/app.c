@@ -379,7 +379,7 @@ void TurnCtrl(IDCMD *p_ic)
 
     if (sro>=0)
         dir=1;//Õý×ª
-    if else
+    else
         sro=-sro;
     if (sro>ANGLE_MAX)
         sro=ANGLE_MAX;
