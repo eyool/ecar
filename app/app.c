@@ -363,8 +363,11 @@ void RunCtrl(IDCMD *p_ic)
 		
 }
 #define ANGLE_CYCLE   3600
+#define ANGLE_DT      10
+#define ANGLE_MAX     1350
 void TurnCtrl(IDCMD *p_ic)
 {
+ //   static INT8U IsRun=0;
     int dspd,dir=0;
     int sro=p_ic->dis,cro=m_sensor[0].rotation[0]-m_sensor[0].rotation[1];
     if(cro>=(ANGLE_CYCLE>>1)) cro-=ANGLE_CYCLE;
@@ -374,76 +377,64 @@ void TurnCtrl(IDCMD *p_ic)
     if(sro>=(ANGLE_CYCLE>>1)) sro-=ANGLE_CYCLE;
     if(sro<=-(ANGLE_CYCLE>>1)) sro+=ANGLE_CYCLE;
 
-    if (cro<=sro)
+    if (sro>=0)
         dir=1;//Õý×ª
+    if else
+        sro=-sro;
+    if (sro>ANGLE_MAX)
+        sro=ANGLE_MAX;
 
-
-
-    if (sro<0) sro=-sro;
-    if (cro<0) cro=-cro;
-        
-    if(sro>(cro<<2)){
-        dspd=p_ic->spd-m_sensor[0].turnspeed;
+    if (sro<ANGLE_DT) {
+        OpenTurnBreak();
+        SetMotorSpd(MOTOR_TURN,0);
+    }
+    else {
+        CloseTurnBreak();
+        if (dir) 
+            TurnRight();
+        else
+            TurnRight();
+      
+        dspd=((p_ic->spd*sro)/ANGLE_MAX)-m_sensor[0].turnspeed;
         if (dspd>SPD_DT_LMT) 
             dspd=SPD_DT_LMT;
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;
         AdjustMotorSpd(MOTOR_TURN,dspd);
     }
-    else if(sro>(cro<<1)){
-        dspd=(p_ic->spd>>1)-m_sensor[0].turnspeed;
-        if (dspd>SPD_DT_LMT) 
-            dspd=SPD_DT_LMT;
-        if (dspd<-SPD_DT_LMT) 
-            dspd=-SPD_DT_LMT;
-        AdjustMotorSpd(MOTOR_TURN,dspd);    
-    }
-    else if((sro*3>>2)>cro){
-        dspd=(p_ic->spd>>2)-m_sensor[0].turnspeed;
-        if (dspd>SPD_DT_LMT) 
-            dspd=SPD_DT_LMT;
-        if (dspd<-SPD_DT_LMT) 
-            dspd=-SPD_DT_LMT;
-        AdjustMotorSpd(MOTOR_TURN,dspd);    
-    }
-    else{
-        OpenTurnBreak();
-        SetMotorSpd(MOTOR_TURN,0);                                          
-    }
 }
+#define TILT_MAX    100
+#define TILT_DT    10
 void TiltCtrl(IDCMD *p_ic)
 {
-    int dspd;
-    int stilt=p_ic->dis,ctilt=m_sensor[0].tilt;
-    if (stilt<0) stilt=-stilt;
-    if (ctilt<0) ctilt=-ctilt; 
-    if (stilt>(ctilt<<2)) {
-        dspd=p_ic->spd-m_sensor[0].turnspeed;
-        if (dspd>SPD_DT_LMT) 
-            dspd=SPD_DT_LMT;
-        if (dspd<-SPD_DT_LMT) 
-            dspd=-SPD_DT_LMT;
-        AdjustMotorSpd(MOTOR_TILT,dspd); 
-    }
-    else if (stilt>(ctilt<<1)) {
-        dspd=(p_ic->spd>>1)-m_sensor[0].turnspeed;
-        if (dspd>SPD_DT_LMT) 
-            dspd=SPD_DT_LMT;
-        if (dspd<-SPD_DT_LMT) 
-            dspd=-SPD_DT_LMT;
-        AdjustMotorSpd(MOTOR_TILT,dspd); 
-    }
-    else if (stilt*3>(ctilt<<2)) {
-        dspd=(p_ic->spd>>2)-m_sensor[0].turnspeed;
-        if (dspd>SPD_DT_LMT) 
-            dspd=SPD_DT_LMT;
-        if (dspd<-SPD_DT_LMT) 
-            dspd=-SPD_DT_LMT;
-        AdjustMotorSpd(MOTOR_TILT,dspd); 
-    }
-    else if(stilt*7>(ctilt<<3)){
+    int dspd,dir=0;
+    int stilt=p_ic->dis-m_sensor[0].tilt;
+
+    if (stilt>0) 
+        dir=1;
+    else   
+        stilt=-stilt; 
+    if (stilt>TILT_MAX) 
+        stilt=TILT_MAX;
+
+    if (stilt<TILT_DT) {
         SetMotorSpd(MOTOR_TILT,0); 
-    }
-    else
         CloseAllRelay();
+    }
+    else{
+        if (dir){
+            CloseDownRelay();
+            OpenUpRelay();
+        } else{
+            CloseUpRelay();
+            OpenDownRelay();
+        }
+        dspd=((p_ic->spd*stilt)/TILT_MAX)-m_sensor[0].turnspeed;
+        if (dspd>SPD_DT_LMT) 
+            dspd=SPD_DT_LMT;
+        if (dspd<-SPD_DT_LMT) 
+            dspd=-SPD_DT_LMT;
+        AdjustMotorSpd(MOTOR_TILT,dspd);
+
+    }
 }
