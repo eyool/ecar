@@ -362,12 +362,26 @@ void RunCtrl(IDCMD *p_ic)
     
 		
 }
+#define ANGLE_CYCLE   3600
 void TurnCtrl(IDCMD *p_ic)
 {
-    int dspd;
+    int dspd,dir=0;
     int sro=p_ic->dis,cro=m_sensor[0].rotation[0]-m_sensor[0].rotation[1];
+    if(cro>=(ANGLE_CYCLE>>1)) cro-=ANGLE_CYCLE;
+    if(cro<=-(ANGLE_CYCLE>>1)) cro+=ANGLE_CYCLE;
+
+    sro=sro-cro;
+    if(sro>=(ANGLE_CYCLE>>1)) sro-=ANGLE_CYCLE;
+    if(sro<=-(ANGLE_CYCLE>>1)) sro+=ANGLE_CYCLE;
+
+    if (cro<=sro)
+        dir=1;//Õý×ª
+
+
+
     if (sro<0) sro=-sro;
-    if (cro<0) cro=-cro;    
+    if (cro<0) cro=-cro;
+        
     if(sro>(cro<<2)){
         dspd=p_ic->spd-m_sensor[0].turnspeed;
         if (dspd>SPD_DT_LMT) 
