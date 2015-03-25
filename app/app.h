@@ -53,9 +53,9 @@ typedef struct _SENSOR{
 
 //
 #define C_PC_POS			1 
-#define C_PC_CFG_MD5	2 
+#define C_PC_CFG_MD5		2 
 //#define C_PC_CFG_MD5_OK		1 
-#define C_PC_CFG_DL		3 
+#define C_PC_CFG_DL			3 
 #define C_PC_CFG_DL_ERR		0xffff 
 #define C_PC_CFG_DL_OK		0xfffe 
 
