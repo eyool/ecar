@@ -68,7 +68,7 @@ typedef struct _SENSOR{
 #define CAR_STATUS_INIT			1
 #define CAR_STATUS_JOIN			2
 #define CAR_STATUS_WAITCMD		3
-#define CAR_STATUS_GO			4
+#define CAR_STATUS_RUN			4
 #define CAR_STATUS_BACK			5
 //-----------------------
 void App_init(void);
