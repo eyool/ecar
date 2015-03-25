@@ -63,6 +63,13 @@ typedef struct _SENSOR{
 #define SYS_STATUS_INIT_ERR	2
 
 #define PROGRAMM_KEY  0xa55a9527
+
+#define CAR_STATUS_NULL			0
+#define CAR_STATUS_INIT			1
+#define CAR_STATUS_JOIN			2
+#define CAR_STATUS_WAITCMD		3
+#define CAR_STATUS_GO			4
+#define CAR_STATUS_BACK			5
 //-----------------------
 void App_init(void);
 void MSDelay(UINT ms);//²ÎÊý£ºms
