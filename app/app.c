@@ -393,7 +393,7 @@ void TurnCtrl(IDCMD *p_ic)
         if (dir) 
             TurnRight();
         else
-            TurnRight();
+            TurnLeft();
       
         dspd=((p_ic->spd*sro)/ANGLE_MAX)-m_sensor[0].turnspeed;
         if (dspd>SPD_DT_LMT) 
