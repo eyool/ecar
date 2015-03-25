@@ -365,13 +365,16 @@ void RunCmdProc(RFID *p_rfid)
 			IDCMD *p_ic = FindUhfidCmd(p_rfid);
 			switch(p_ic->cmd){
 					case  CAR_CMD_RUN:
-						RunCtrl(p_ic);
+						if(m_car.l_tick>p_ic->tick)
+							RunCtrl(p_ic);
 						break;
 					case 	CAR_CMD_TURN:
-						TurnCtrl(p_ic);
+						if(m_car.l_tick>p_ic->tick)
+							TurnCtrl(p_ic);
 						break;
 					case 	CAR_CMD_ANGLE:
-						TiltCtrl(p_ic);
+						if(m_car.l_tick>p_ic->tick)
+							TiltCtrl(p_ic);
 						break;
 					case 	CAR_CMD_PLAY:
 

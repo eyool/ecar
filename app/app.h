@@ -30,7 +30,7 @@ typedef struct _CAR{
 	INT32U g_tick,l_tick;/*g_tick：每次运行开始实际，l_tick：卡ID更新后从新计时 */
 	INT32S pos;
 	INT16S st_angle,st_turn,st_run;
-	RFID *p_rfid[2];/*保存2次卡ID*/
+	RFID *p_rfid[2];/*保存2次卡ID*/ 
 	INT8U cid,addr,status;
 }CAR;
 
