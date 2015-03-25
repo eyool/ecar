@@ -3,7 +3,7 @@
 
 
 typedef struct _SENSOR{
-	int a,b,c;
+	int a,b,c,d;
 	
 }SENSOR;
 
