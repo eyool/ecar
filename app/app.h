@@ -26,6 +26,14 @@ typedef struct _SENSOR{
 	
 }SENSOR;
 
+typedef struct _CAR{
+	INT32U g_tick,l_tick;/*g_tick：每次运行开始实际，l_tick：卡ID更新后从新计时 */
+	INT32S pos;
+	INT16S st_angle,st_turn,st_run;
+	RFID *p_rfid[2];/*保存2次卡ID*/
+	INT8U cid,addr,status;
+}CAR;
+
 /*typedef struct _CARSET{
 	INT16U runspd,turnspd;
 	
@@ -82,8 +90,10 @@ void Debug(INT8U *buf,INT8U len);
 INT8U CheckSelf(void);
 INT8U DowloadCFG(void);
 void NetSend(INT8U len,INT8U chl);
-void CmdProc(INT8U *buf,INT8U len);
+void NetCmdProc(INT8U *buf,INT8U len);
+void RunCmdProc(RFID *p_rfid);
 void RunCtrl(IDCMD *p_ic);
 void TurnCtrl(IDCMD *p_ic);
 void TiltCtrl(IDCMD *p_ic);
+
 #endif

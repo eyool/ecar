@@ -9,8 +9,8 @@ INT8U *Systbuf;
 INT32U G_msg[5];
 INT8U SysStatus,b_debug=0;
 SENSOR m_sensor[2];//0,当前，1，保留上次
-RFID *p_rfid;
-
+//RFID *p_rfid;
+CAR m_car;
 //----------
 float test(void)
 {
@@ -29,7 +29,11 @@ void App_init(void)
 	SysStatus=0;
 	Systbuf=LvSystbuf+8;
 	memset((void *)m_sensor,0,sizeof(m_sensor));
-	p_rfid=NULL;
+	memset((void *)&m_car,0,sizeof(CAR));
+	m_car.addr=GetAddr();
+	m_car.status=CAR_STATUS_NULL;
+
+//	p_rfid=NULL;
 	OSTimeDly(2);
 	WifiEnable();
 	ZigbeeEnable();
@@ -48,7 +52,7 @@ void App_init(void)
 	}
 	else
 			SysStatus=SYS_STATUS_INIT_ERR;	*/		
-	test();
+//	test();
 
 }
 //--------------------
@@ -99,6 +103,7 @@ void MainTaskProc(void *p_msg)
 void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 {
 	static INT8U debugcmd=0;
+	RFID *pid;
 	if(chl==UART_CHL_UHFID){
 		if(buf[0]=='D'&&buf[1]=='B'&&buf[2]=='G'&&buf[3]=='U')//debug uart
 			if(buf[4]=='='&&buf[5]=='U'&&buf[6]=='2'){
@@ -128,19 +133,26 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 		if(chl==UART_CHL_WIFI){
 			if(IsNetData(buf,len)){
 					SetWifiLinkTime();
-					CmdProc(buf,len);
+					NetCmdProc(buf,len);
 			}
 			Debug(buf,len);
 		}		
 		else if(chl==UART_CHL_ZIGBEE){
 					if(IsNetData(buf,len)){
 							SetZigbeeLinkTime();
-							CmdProc(buf,len);
+							NetCmdProc(buf,len);
 					}
 		}
 		else if(chl==UART_CHL_UHFID){
 				*(INT32U *)buf=ParseUhfid(buf,buf+5,len);
-				p_rfid=GetRfidStruct(*(INT32U *)buf&RDID_BITS);
+				pid=GetRfidStruct(*(INT32U *)buf&RDID_BITS);
+				if(pid){
+					if(pid!=m_car.p_rfid[0]&&pid!=m_car.p_rfid[1]){
+						m_car.p_rfid[1]=m_car.p_rfid[0];
+						m_car.p_rfid[0]=pid;
+						m_car.l_tick=OSTimeGet();   
+					}
+				}
 				//Wifi_send(buf,len);
 		}
 	}
@@ -150,27 +162,24 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 //任务函数 3/4
 void AppRunProc(void  *p_msg)
 {
-    int i;
 	if(!p_msg){
 		OSTimeDly(20);
-		if(p_rfid){
-            for (i=0;i<p_rfid->n_idcmd;i++){
-                IDCMD *p_ic = FindUhfidCmd(p_rfid);
-    			switch(p_ic->cmd){
-    				case  CAR_CMD_RUN:
-    						RunCtrl(p_ic);
-    					break;
-    				case 	CAR_CMD_TURN:
-    						TurnCtrl(p_ic);
-    					break;
-    				case 	CAR_CMD_ANGLE:
-    						TiltCtrl(p_ic);
-    					break;
-    				case 	CAR_CMD_PLAY:
-    					
-    					break;
-    			}
-            }
+		switch(m_car.status){
+			case CAR_STATUS_NULL:
+
+				break;
+			case CAR_STATUS_INIT:
+
+				break;
+			case CAR_STATUS_JOIN:
+
+				break;
+			case CAR_STATUS_RUN:
+				RunCmdProc(m_car.p_rfid[0]);
+				break;
+			case CAR_STATUS_WAITCMD:
+
+				break;
 		}
 	}
 	else{
@@ -282,7 +291,7 @@ INT8U DowloadCFG(void)
 
 
 
-void CmdProc(INT8U *buf,INT8U len)
+void NetCmdProc(INT8U *buf,INT8U len)
 {
 	static INT8U b_dl=0;
 	INT8U sp=0,sn;
@@ -346,6 +355,30 @@ INT8U CheckSelf(void)
 	
 
 	return 0;
+}
+
+void RunCmdProc(RFID *p_rfid)
+{
+	int i;
+	if(p_rfid){
+		for (i=0;i<p_rfid->n_idcmd;i++){
+			IDCMD *p_ic = FindUhfidCmd(p_rfid);
+			switch(p_ic->cmd){
+					case  CAR_CMD_RUN:
+						RunCtrl(p_ic);
+						break;
+					case 	CAR_CMD_TURN:
+						TurnCtrl(p_ic);
+						break;
+					case 	CAR_CMD_ANGLE:
+						TiltCtrl(p_ic);
+						break;
+					case 	CAR_CMD_PLAY:
+
+						break;
+			}
+		}
+	}
 }
 #define SPD_DT_LMT 10
 void RunCtrl(IDCMD *p_ic)
