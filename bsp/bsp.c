@@ -1259,7 +1259,7 @@ INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len)
 IDCMD *FindUhfidCmd(RFID *p_rfid)
 {
 	static INT8U n_cmd=0;
-  IDCMD *	p_ic=&p_rfid->p_idcmd;
+	IDCMD *	p_ic=&p_rfid->p_idcmd;
 	p_ic+=n_cmd;
 	if(p_rfid->n_idcmd<=++n_cmd)
 		n_cmd=0;

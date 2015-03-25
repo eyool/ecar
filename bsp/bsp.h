@@ -12,8 +12,8 @@
 
 
 typedef struct _IDCMD{
-	INT16S dis,tick;	
-	INT8U cmd,type,spd,rev;
+	INT16S dis,tick;	/*tickµ•Œª «0.1√Î*/
+	INT8U cmd,type,spd,runtime;
 }IDCMD;
 typedef struct _RFID{
 	INT32S pos;	
