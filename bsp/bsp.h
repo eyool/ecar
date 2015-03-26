@@ -200,6 +200,7 @@ typedef struct _RFID{
 //#define	DEVADDRB_PORT           			 GPIOB
 //#define	DEVADDRC_PORT           			 GPIOC
 //esp8266  
+#define WIFI_LINK_OK			1
 #define WIFI_ST_OK			2
 #define WIFI_OVTETIME   10000
 #define WIFI_NRST    		5
@@ -260,6 +261,10 @@ void PS_init(void);
 #define FRAME_END 0x8f
 #define FRAME_BROAD 0xff
 
+
+#define KEY_PLAY	1
+#define KEY_JOIN		2
+#define KEY_REV		4
 /*******************************************
 *Wifi 设置远程服务器 默认192.168.100.3
 *******************************************/

@@ -729,27 +729,41 @@ void Wifi_Istr(void)
    USART_DMACmd(WIFI_AF,USART_DMAReq_Rx ,DISABLE);
    DMA_Cmd(WIFI_DMA_RX_Channel, DISABLE);
    DMA_SetCurrDataCounter(WIFI_DMA_RX_Channel,WIFI_DMA_RX_BUFSIZE);
+
+	if((wifimsg[0]&0xff)>=8&&*(INT32U *)WifiRxBuf==*(INT32U *)&"AT+C"){	
+			if((wifimsg[0]&0xff)<WIFI_DMA_RX_BUFSIZE)
+					 WifiRxBuf[wifimsg[0]&0xff]=0;	
+			if(*(INT32U *)(WifiRxBuf+4)==*(INT32U *)&"IPST"){	
+				if(strstr((char *)(WifiRxBuf+8),"OK")||strstr((char *)(WifiRxBuf+8),"CONNECT"))
+					Status_Wifi=1;
+				else
+					Status_Wifi=0;	
+			}else if(*(INT32U *)(WifiRxBuf+4)==*(INT32U *)&"IPSE"){	
+					if(strstr((char *)(WifiRxBuf+8),"OK"))
+						Status_Wifi=2;
+					else
+						Status_Wifi=0;				
+			}				
+		}	
    DMA_Cmd(WIFI_DMA_RX_Channel, ENABLE);
-   USART_DMACmd(WIFI_AF,USART_DMAReq_Rx ,ENABLE);
-	switch(Status_Wifi)
-	{
-		case 0:
-		if(*(INT32U *)WifiRxBuf==*(INT32U *)&"AT+C")
-			if((wifimsg[0]&0xff)<WIFI_DMA_RX_BUFSIZE){
-				 WifiRxBuf[wifimsg[0]&0xff]=0;
-				if(strstr((char *)WifiRxBuf,"CONNECT"))
-					Status_Wifi++;
-			}
-		break;
-		case 1:
-		if(*(INT32U *)WifiRxBuf==*(INT32U *)&"AT+C")	
-			if((wifimsg[0]&0xff)<WIFI_DMA_RX_BUFSIZE){
-				 WifiRxBuf[wifimsg[0]&0xff]=0;			
-					if(WifiRxBuf[(wifimsg[0]&0xff)-1]=='>')
-						Status_Wifi++;	
-			}			
-			break;				
-	}
+   USART_DMACmd(WIFI_AF,USART_DMAReq_Rx ,ENABLE);	
+	/*	switch(Status_Wifi)
+		{
+			case 0:
+					if(strstr((char *)WifiRxBuf,"CONNECT"))
+						Status_Wifi++;
+				}
+			break;
+			case 1:
+	//		if(*(INT32U *)WifiRxBuf==*(INT32U *)&"AT+C")	
+	//			if((wifimsg[0]&0xff)<WIFI_DMA_RX_BUFSIZE){
+	//				 WifiRxBuf[wifimsg[0]&0xff]=0;			
+						if(WifiRxBuf[(wifimsg[0]&0xff)-1]=='>')
+							Status_Wifi++;	
+				}			
+				break;				
+		}
+	}*/
 }
 void Zigbee_Istr(void)
 {
@@ -1066,6 +1080,9 @@ INT8U GetPSData(INT8U chl,INT32S *data)
 }
 void WifiLink(void)
 {
+#ifdef NOAUTOLINK
+	return;
+#endif
 	if(OSTimeGet()>WIFI_OVTETIME+WifiLinkTime){
 		if(NRst_Wifi++>WIFI_NRST){			
 			NRst_Wifi=0;
@@ -1104,7 +1121,7 @@ void Wifi_SetReSrv(void)
 	OSTimeDly(30);
 	//strcpy(buf,WIFI_RESRV,sizeof(WIFI_RESRV);
 	Wifi_AT(WIFI_SETRESRV,sizeof(WIFI_SETRESRV)-1);	
-	OSTimeDly(30);	
+	OSTimeDly(50);	
 //	Wifi_send(WIFI_INTOSEND,sizeof(WIFI_INTOSEND)-1);		
 //	OSTimeDly(2);	
 	Wifi_AT(WIFI_STARTSEND,sizeof(WIFI_STARTSEND)-1);			

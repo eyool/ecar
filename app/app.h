@@ -12,26 +12,29 @@ extern OS_EVENT      *App_StartMbox;
 
 
 typedef struct _SENSOR{
-	INT32S	ps;		/*压力值*/
-	INT32S	pos;/*车体离起点位置 ，cm*/		
+	INT32S		ps;		/*压力值*/
+//	INT32S		pos;/*车体离起点位置 ，cm*/		
 	INT32U 	r_np[2],t_np;/*前进计数,角度计数*/
-	INT16S  tilt;/*倾角-1800-1799*/
-	INT16S  rotation[2];/*转角-1800-1799*/	
-	INT16S	runspeed[2];/*轮子转速，*/
-	INT16S	turnspeed;	/*旋转speed,*/
-	INT16S	usdis;/*前方空闲距离*/
-	INT16S	xv;	
-	INT16U  b_hall;/*霍尔传感器状态*/
+	INT16S		tilt;/*倾角-1800-1799*/
+	INT16S		rotation[2];/*转角-1800-1799*/	
+	INT16S		runspeed[2];/*轮子转速，*/
+	INT16S		turnspeed;	/*旋转speed,*/
+	INT16S		usdis;/*前方空闲距离*/
+	INT16S		xv;	
+	INT16U	b_hall;/*霍尔传感器状态*/
 
 	
 }SENSOR;
 
+#define CAR_MAX	16
 typedef struct _CAR{
-	INT32U g_tick,l_tick;/*g_tick：每次运行开始实际，l_tick：卡ID更新后从新计时 */
-	INT32S pos;
-	INT16S st_angle,st_turn,st_run;
+	INT32U pos,g_tick,l_tick;/*g_tick：每次运行开始实际，l_tick：卡ID更新后从新计时 */
+	INT8U allcarid[CAR_MAX];
+	INT32U allcarpos[CAR_MAX];
+//	INT16S st_angle,st_turn,st_run;
 	RFID *p_rfid[2];/*保存2次卡ID*/ 
-	INT8U cid,addr,status;
+	INT16U spd;
+	INT8U cid,addr,status,err;
 }CAR;
 
 /*typedef struct _CARSET{
@@ -64,13 +67,18 @@ typedef struct _CAR{
 #define C_PC_CFG_MD5		2 
 //#define C_PC_CFG_MD5_OK		1 
 #define C_PC_CFG_DL			3 
+#define C_PC_CFG_JOIN			4 
+
+
 #define C_PC_CFG_DL_ERR		0xffff 
 #define C_PC_CFG_DL_OK		0xfffe 
 
-#define SYS_STATUS_INIT_OK	1
-#define SYS_STATUS_INIT_ERR	2
 
 #define PROGRAMM_KEY  0xa55a9527
+
+
+#define SYS_STATUS_INIT_OK		0x0
+#define SYS_STATUS_INIT_ERR		0x1
 
 #define CAR_STATUS_NULL			0
 #define CAR_STATUS_INIT			1
@@ -78,7 +86,17 @@ typedef struct _CAR{
 #define CAR_STATUS_WAITCMD		3
 #define CAR_STATUS_RUN			4
 #define CAR_STATUS_BACK			5
+
+#define CAR_AREA_NULL			0
+#define CAR_AREA_START			1
+#define CAR_AREA_PLAY			2
+#define CAR_AREA_GETOFF			3
+#define CAR_AREA_BACK			4
+#define CAR_AREA_STOP			5
+#define CAR_AREA_GETON			6
 //-----------------------
+#define POSMODIFY(a)  (a*2>>8)/*需要实际测试修正*/
+#define SPDMODIFY(a)  (a*2>>8)
 void App_init(void);
 void MSDelay(UINT ms);//参数：ms
 void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len);
@@ -95,5 +113,8 @@ void RunCmdProc(RFID *p_rfid);
 void RunCtrl(IDCMD *p_ic);
 void TurnCtrl(IDCMD *p_ic);
 void TiltCtrl(IDCMD *p_ic);
-
+void SW_Power(void);
+int   RegisterCar(INT8U id,INT32U pos);
+void UnRegisterCar(INT8U id);
+INT32U GetFrontDis(void);
 #endif

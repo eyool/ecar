@@ -7,7 +7,8 @@ INT8U LvSystbuf[SYS_TBUF_LEN+8];//系统临时缓存
 
 INT8U *Systbuf;
 INT32U G_msg[5];
-INT8U SysStatus,b_debug=0;
+//INT32U SysStatus,
+INT8U b_debug=0,sw_power=0;
 SENSOR m_sensor[2];//0,当前，1，保留上次
 //RFID *p_rfid;
 CAR m_car;
@@ -26,34 +27,34 @@ float test(void)
 
 void App_init(void)
 {
-	SysStatus=0;
+	//SysStatus=0;
 	Systbuf=LvSystbuf+8;
 	memset((void *)m_sensor,0,sizeof(m_sensor));
 	memset((void *)&m_car,0,sizeof(CAR));
 	m_car.addr=GetAddr();
 	m_car.status=CAR_STATUS_NULL;
-
 //	p_rfid=NULL;
 	OSTimeDly(2);
 	WifiEnable();
 	ZigbeeEnable();
 	OSTimeDly(500);	
-
-/*	while(WifiStatus()!=WIFI_ST_OK){
-		WifiLink();
+//  Wifi_SetReSrv();
+//	OSTimeDly(500);	
+	
+	while(WifiStatus()<WIFI_LINK_OK){
+		Wifi_SetReSrv();
 		OSTimeDly(50);			
 	}
 	if(CheckSelf()){	
-			while(!DowloadCFG()){
-				OSTimeDly(200);		
-				WifiLink();
-			}				
-			SysStatus=SYS_STATUS_INIT_OK;	
+		while(!DowloadCFG()){
+			WifiLink();
+			OSTimeDly(200);			
+		}				
 	}
 	else
-			SysStatus=SYS_STATUS_INIT_ERR;	*/		
+		m_car.err=SYS_STATUS_INIT_ERR;			
 //	test();
-
+	m_car.status=CAR_STATUS_INIT;
 }
 //--------------------
 void nopf(void)
@@ -65,38 +66,26 @@ void MSDelay(UINT ms)//参数：ms
 {
   OSTimeDly(ms);
 }
-
-//-------------------
-//主任务函数1/4
-void MainTaskProc(void *p_msg)
-{
 /*static UINT lasttick=0;
 	UINT ct=OSTimeGet();   
         
         if(lasttick==0) 
           lasttick=ct;*/
-
+//-------------------
+//主任务函数1/4
+void MainTaskProc(void *p_msg)
+{
 	if(p_msg==0){
-
-	  if(GPIO_ReadOutputDataBit(GPIOC,GPIO_Pin_10)){
-			 	GPIO_ResetBits(GPIOC,GPIO_Pin_10);
-				 OSTimeDly(200);
-				}
-			else{
-				GPIO_SetBits(GPIOC,GPIO_Pin_10);
-				 OSTimeDly(300);
-				} 
+		SW_Power();
 		//----------------------------
 		if(!b_debug)
 			WifiLink();//让wifi断线从新连接
-//		ZigbeeLink();//zigbee断线从新连接
+		ZigbeeLink();//zigbee断线从新连接
 		OSTimeDly(20);	
-
 	}
 	else
 	{
-           //SetMsg((UINT)p_msg,MsgParam);
-				 OSTimeDly(10);		
+		OSTimeDly(10);		
 	}
 }
 //任务函数 2/4
@@ -144,7 +133,7 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 					}
 		}
 		else if(chl==UART_CHL_UHFID){
-				*(INT32U *)buf=ParseUhfid(buf,buf+5,len);
+				*(INT32U *)buf=ParseUhfid(buf,(INT8S *)(buf+5),len);
 				pid=GetRfidStruct(*(INT32U *)buf&RDID_BITS);
 				if(pid){
 					if(pid!=m_car.p_rfid[0]&&pid!=m_car.p_rfid[1]){
@@ -162,6 +151,7 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 //任务函数 3/4
 void AppRunProc(void  *p_msg)
 {
+//	INT8U buf[4];
 	if(!p_msg){
 		OSTimeDly(20);
 		switch(m_car.status){
@@ -169,16 +159,38 @@ void AppRunProc(void  *p_msg)
 
 				break;
 			case CAR_STATUS_INIT:
-
+				if(!m_car.err&&(GetKey()&KEY_JOIN)){
+					Systbuf[0]=C_PC_CFG_JOIN;
+					NetSend(1,NET_CHL_ALL);
+				}
 				break;
 			case CAR_STATUS_JOIN:
-
+				sw_power=1;
+				if(m_car.p_rfid[0])
+					if(m_car.p_rfid[0]->id)
+						m_car.status=CAR_STATUS_RUN;
 				break;
 			case CAR_STATUS_RUN:
-				RunCmdProc(m_car.p_rfid[0]);
+				if(m_car.p_rfid[0]){
+					if((m_car.p_rfid[0]->area==CAR_AREA_GETOFF&&!(GetKey()&KEY_PLAY))||(m_car.p_rfid[0]->area==CAR_AREA_GETON&&(GetKey()&KEY_PLAY))){
+						SetMotorSpd(MOTOR_TURN,0);
+						SetMotorSpd(MOTOR_RL,0);
+						SetMotorSpd(MOTOR_RR,0);
+						SetMotorSpd(MOTOR_TILT,0);
+						CloseAllRelay();
+						sw_power=0;
+					}
+					else{
+						if(!sw_power){
+							sw_power=1;
+							OSTimeDly(500);
+						}
+						RunCmdProc(m_car.p_rfid[0]);
+					}
+				}
 				break;
 			case CAR_STATUS_WAITCMD:
-
+				
 				break;
 		}
 	}
@@ -191,32 +203,41 @@ void AppRunProc(void  *p_msg)
 void SensorProc(void)
 {
 	INT16S buf[9]; 
+	SENSOR *p_sensor=&m_sensor[0];
+	int tmp;
 //	INT8U *bp=(INT8U *)buf; 	
 	memcpy((void *)&m_sensor[1],(void *)&m_sensor[0],sizeof(SENSOR));
 	//得到霍尔 ，加速度，压力传感器
 	ADXL_GetData((INT8U *)buf,6);
 	HMC_GetData((INT8U *)(buf+3),12);
-	m_sensor[0].tilt=GetArc(buf[0],buf[1]);
-	m_sensor[0].rotation[0]=GetArc(buf[3],buf[5]);	
-	m_sensor[0].rotation[1]=GetArc(buf[6],buf[8]);	
+	p_sensor->tilt=GetArc(buf[0],buf[1]);
+	p_sensor->rotation[0]=GetArc(buf[3],buf[5]);	
+	p_sensor->rotation[1]=GetArc(buf[6],buf[8]);	
   if(GetPSData(PS_CHL_A,(INT32S *)buf))
-		m_sensor[0].ps=*(INT32S *)buf;
+		p_sensor->ps=*(INT32S *)buf;
 	//---检查是否回正
 	if(CheckCenter())
-		m_sensor[0].b_hall|=B_HALL_C;
+		p_sensor->b_hall|=B_HALL_C;
 	else
-		m_sensor[0].b_hall&=(~B_HALL_C);	
+		p_sensor->b_hall&=(~B_HALL_C);	
 	//得到外部电压
-		m_sensor[0].xv=GetXV();
-	//这里添加测距函数
-	
+		p_sensor->xv=GetXV();
 	//得到电机数度和脉冲数
-		m_sensor[0].turnspeed=GetMotorSpd(MOTOR_TURN);
-		m_sensor[0].runspeed[0]=GetMotorSpd(MOTOR_RL);	
-		m_sensor[0].runspeed[1]=GetMotorSpd(MOTOR_RR);
-		m_sensor[0].t_np=GetMotorPoscn(MOTOR_TURN);
-		m_sensor[0].r_np[0]=GetMotorPoscn(MOTOR_RL);	
-		m_sensor[0].r_np[1]=GetMotorPoscn(MOTOR_RR);
+		p_sensor->turnspeed=GetMotorSpd(MOTOR_TURN);
+		p_sensor->runspeed[0]=GetMotorSpd(MOTOR_RL);	
+		p_sensor->runspeed[1]=GetMotorSpd(MOTOR_RR);
+		p_sensor->t_np=GetMotorPoscn(MOTOR_TURN);
+		p_sensor->r_np[0]=GetMotorPoscn(MOTOR_RL);	
+		p_sensor->r_np[1]=GetMotorPoscn(MOTOR_RR);
+	//这里添加测距函数
+		tmp=(m_sensor[0].runspeed[0]>>2)+(m_sensor[0].runspeed[1]>>2);
+		tmp+=(m_sensor[1].runspeed[0]>>2)+(m_sensor[1].runspeed[1]>>2);
+		m_car.spd=SPDMODIFY(tmp);
+		tmp=(p_sensor->r_np[0]>>1)+(p_sensor->r_np[1]>>1);
+		m_car.pos=POSMODIFY(tmp);
+		if(m_car.p_rfid[0])
+			m_car.pos+=m_car.p_rfid[0]->pos;
+		
 	//Wifi_send((INT8U *)buf,18);
 	OSTimeDly(10);
 }
@@ -294,9 +315,10 @@ INT8U DowloadCFG(void)
 void NetCmdProc(INT8U *buf,INT8U len)
 {
 	static INT8U b_dl=0;
+	static INT32U mbuf[4];	
 	INT8U sp=0,sn;
 	INT8U *rbuf;
-	INT32U mbuf[4];
+
 	sn=GetCmd(buf,&rbuf,&sp,len);
 	while(sn){
 		switch(*rbuf){
@@ -344,7 +366,11 @@ void NetCmdProc(INT8U *buf,INT8U len)
 						}
 						
 					}											
-			break;			
+			break;	
+			case C_PC_CFG_JOIN:
+				if(rbuf[1])
+					m_car.status=CAR_STATUS_JOIN;
+				break;
 		}
 		sn=GetCmd(buf,&rbuf,&sp,len);	
 	}
@@ -386,13 +412,17 @@ void RunCmdProc(RFID *p_rfid)
 #define SPD_DT_LMT 10
 void RunCtrl(IDCMD *p_ic)
 {
-    int dspd,rspd;
-    rspd=m_sensor[0].runspeed[0]+p_ic->spd-m_sensor[0].runspeed[1]>>1;
-    dspd=p_ic->spd-rspd;
+    int dspd;//,rspd;
+    //rspd=;m_sensor[0].runspeed[0]+p_ic->spd-m_sensor[0].runspeed[1]>>1;
+    dspd=p_ic->spd-m_car.spd;
     if (dspd>SPD_DT_LMT) 
         dspd=SPD_DT_LMT;
     if (dspd<-SPD_DT_LMT) 
         dspd=-SPD_DT_LMT;
+	if(m_car.p_rfid[0])
+		if(GetFrontDis()<m_car.p_rfid[0]->safedis)
+			dspd=-SPD_DT_LMT;
+	
     AdjustMotorSpd(MOTOR_RL,dspd);
     AdjustMotorSpd(MOTOR_RR,dspd);
     
@@ -473,4 +503,44 @@ void TiltCtrl(IDCMD *p_ic)
         AdjustMotorSpd(MOTOR_TILT,dspd);
 
     }
+}
+void SW_Power(void)
+{
+	if(sw_power&&(OSTimeGet()&0xff)<50)
+		SetSafeLine();
+	else
+		ResetSafeLine();
+}
+int RegisterCar(INT8U id,INT32U pos)
+{	
+	int i=0;
+	for (;i<CAR_MAX;i++)
+		if(m_car.allcarid[i]==id){
+			m_car.allcarpos[i]=pos;
+			return i;
+		}
+	if(i>=CAR_MAX)
+		for (i=0;i<CAR_MAX;i++)
+			if(!m_car.allcarid[i]){
+				m_car.allcarid[i]=id;
+				m_car.allcarpos[i]=pos;
+				return i;
+			}
+	return -1;
+}
+void UnRegisterCar(INT8U id)
+{
+	int i=0;
+	for (;i<CAR_MAX;i++)
+		if(m_car.allcarid[i]==id)
+			m_car.allcarid[i]=0;
+}
+INT32U GetFrontDis(void)
+{
+	INT32U dis=0xffffffff;
+	int i=0;
+	for (;i<CAR_MAX;i++)
+		if(m_car.allcarid[i]&&m_car.pos<m_car.allcarpos[i]&&dis>m_car.allcarpos[i]-m_car.pos)
+				dis=m_car.allcarpos[i]-m_car.pos;
+	return dis;
 }
