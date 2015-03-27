@@ -28,7 +28,7 @@ typedef struct _SENSOR{
 
 #define CAR_MAX	16
 typedef struct _CAR{
-	INT32U pos,g_tick,l_tick;/*g_tick：每次运行开始实际，l_tick：卡ID更新后从新计时 */
+	INT32U pos,rfid_np,g_tick,l_tick;/*g_tick：每次运行开始实际，l_tick：卡ID更新后从新计时 */
 	INT8U allcarid[CAR_MAX];
 	INT32U allcarpos[CAR_MAX];
 //	INT16S st_angle,st_turn,st_run;
@@ -51,10 +51,10 @@ typedef struct _CAR{
 
 #define B_HALL_C 		1
 
-#define MOTOR_RL  	0
-#define MOTOR_RR  	1
-#define MOTOR_TURN  2
-#define MOTOR_TILT  3
+#define MOTOR_RL  	 2
+#define MOTOR_RR  	 3
+#define MOTOR_TURN  0
+#define MOTOR_TILT    1
 //#define PROC_DTIME  		50
 #define SYS_TBUF_LEN			1040
 //
@@ -63,12 +63,13 @@ typedef struct _CAR{
 #define NET_CHL_ALL				3	
 
 //
-#define C_PC_POS			1 
+#define C_PC_POS				1 
 #define C_PC_CFG_MD5		2 
 //#define C_PC_CFG_MD5_OK		1 
 #define C_PC_CFG_DL			3 
-#define C_PC_CFG_JOIN			4 
-
+#define C_PC_CFG_JOIN		4 
+#define C_CAR_REG				5 
+#define C_CAR_UNREG			6 
 
 #define C_PC_CFG_DL_ERR		0xffff 
 #define C_PC_CFG_DL_OK		0xfffe 

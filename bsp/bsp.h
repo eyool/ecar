@@ -106,6 +106,7 @@ typedef struct _RFID{
 #define SPI_CS_HMC0				0
 #define SPI_CS_HMC1				1
 #define SPI_CS_ADXL				2
+#define	ADXL_XOFF				0x1e
 #define	ADXL_BW_RATE		0x2c
 #define	ADXL_POWER_CTL		0x2d
 #define	ADXL_INT_ENABLE		0x2e
@@ -120,7 +121,7 @@ typedef struct _RFID{
 #define	ADXL_FIFO_STATUS 		0x39
 #define	ADXL_RATE_800		0xd
 #define	ADXL_POWER_ON		0x8
-#define	ADXL_DATA_RD		0x8
+#define	ADXL_DATA_RD		0x80
 
 #define HMC_CFGA 	0x00  /*Configuration Register A rw*/
 #define HMC_CFGB 	0x01  /*Configuration Register B rw*/

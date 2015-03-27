@@ -40,11 +40,15 @@ void App_init(void)
 	OSTimeDly(500);	
 //  Wifi_SetReSrv();
 //	OSTimeDly(500);	
-	
+
+
 	while(WifiStatus()<WIFI_LINK_OK){
 		Wifi_SetReSrv();
 		OSTimeDly(50);			
 	}
+	
+#define TEST 1	
+#ifndef	TEST	
 	if(CheckSelf()){	
 		while(!DowloadCFG()){
 			WifiLink();
@@ -53,6 +57,7 @@ void App_init(void)
 	}
 	else
 		m_car.err=SYS_STATUS_INIT_ERR;			
+#endif	
 //	test();
 	m_car.status=CAR_STATUS_INIT;
 }
@@ -120,17 +125,15 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 	//----------------------------
 	if(!debugcmd){
 		if(chl==UART_CHL_WIFI){
-			if(IsNetData(buf,len)){
-					SetWifiLinkTime();
+			if(IsNetData(buf,len))
 					NetCmdProc(buf,len);
-			}
+			SetWifiLinkTime();			
 			Debug(buf,len);
 		}		
 		else if(chl==UART_CHL_ZIGBEE){
-					if(IsNetData(buf,len)){
-							SetZigbeeLinkTime();
+					if(IsNetData(buf,len))
 							NetCmdProc(buf,len);
-					}
+					SetZigbeeLinkTime();					
 		}
 		else if(chl==UART_CHL_UHFID){
 				*(INT32U *)buf=ParseUhfid(buf,(INT8S *)(buf+5),len);
@@ -139,7 +142,8 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 					if(pid!=m_car.p_rfid[0]&&pid!=m_car.p_rfid[1]){
 						m_car.p_rfid[1]=m_car.p_rfid[0];
 						m_car.p_rfid[0]=pid;
-						m_car.l_tick=OSTimeGet();   
+						m_car.l_tick=OSTimeGet();  
+						m_car.rfid_np=m_sensor[0].r_np[0]+m_sensor[0].r_np[1]>>1;
 					}
 				}
 				//Wifi_send(buf,len);
@@ -161,7 +165,9 @@ void AppRunProc(void  *p_msg)
 			case CAR_STATUS_INIT:
 				if(!m_car.err&&(GetKey()&KEY_JOIN)){
 					Systbuf[0]=C_PC_CFG_JOIN;
-					NetSend(1,NET_CHL_ALL);
+					Systbuf[1]=1;
+					NetSend(2,NET_CHL_ALL);
+					OSTimeDly(500);
 				}
 				break;
 			case CAR_STATUS_JOIN:
@@ -209,8 +215,8 @@ void SensorProc(void)
 	memcpy((void *)&m_sensor[1],(void *)&m_sensor[0],sizeof(SENSOR));
 	//得到霍尔 ，加速度，压力传感器
 	ADXL_GetData((INT8U *)buf,6);
+	p_sensor->tilt=GetArc(buf[0],buf[1]);	
 	HMC_GetData((INT8U *)(buf+3),12);
-	p_sensor->tilt=GetArc(buf[0],buf[1]);
 	p_sensor->rotation[0]=GetArc(buf[3],buf[5]);	
 	p_sensor->rotation[1]=GetArc(buf[6],buf[8]);	
   if(GetPSData(PS_CHL_A,(INT32S *)buf))
@@ -233,7 +239,7 @@ void SensorProc(void)
 		tmp=(m_sensor[0].runspeed[0]>>2)+(m_sensor[0].runspeed[1]>>2);
 		tmp+=(m_sensor[1].runspeed[0]>>2)+(m_sensor[1].runspeed[1]>>2);
 		m_car.spd=SPDMODIFY(tmp);
-		tmp=(p_sensor->r_np[0]>>1)+(p_sensor->r_np[1]>>1);
+		tmp=(p_sensor->r_np[0]+p_sensor->r_np[1]>>1)-m_car.rfid_np;
 		m_car.pos=POSMODIFY(tmp);
 		if(m_car.p_rfid[0])
 			m_car.pos+=m_car.p_rfid[0]->pos;
@@ -247,11 +253,13 @@ void Debug(INT8U *buf,INT8U len)
 			if(buf[0]=='D'&&buf[1]=='B'&&buf[2]=='G'){//debug spi
 			if(buf[3]=='S'){//spi 总线数据
 				if(buf[4]=='W'){//write
-					SpiWrite(buf[6],buf+8,buf[7]&7,buf[5]);//地址 ，数据区，要求长度，CS选择
+					//SpiWrite(buf[6],buf+8,buf[7]&7,buf[5]);//地址 ，数据区，要求长度，CS选择
 					
 				}		
 				else if(buf[4]=='R'){//read
-					SpiRead(buf[6],buf+8,buf[7]&7,buf[5]);	
+					//OSSchedLock();
+					SpiRead(buf[6],buf+8,buf[7]&7,buf[5]);
+					//OSSchedUnlock();
 					Wifi_send(buf+8,buf[7]&7);
 				}
 			}
@@ -318,7 +326,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 	static INT32U mbuf[4];	
 	INT8U sp=0,sn;
 	INT8U *rbuf;
-
+	int i;
 	sn=GetCmd(buf,&rbuf,&sp,len);
 	while(sn){
 		switch(*rbuf){
@@ -370,6 +378,14 @@ void NetCmdProc(INT8U *buf,INT8U len)
 			case C_PC_CFG_JOIN:
 				if(rbuf[1])
 					m_car.status=CAR_STATUS_JOIN;
+				break;
+			case C_CAR_REG:
+				for (i=1;i<sn;i+=5)
+					RegisterCar(rbuf[i],*(INT32U *)(rbuf+i+1));							
+				break;
+			case C_CAR_UNREG:
+				for (i=1;i<sn;i++)
+					UnRegisterCar(rbuf[i]);
 				break;
 		}
 		sn=GetCmd(buf,&rbuf,&sp,len);	

@@ -958,7 +958,12 @@ INT16U GetXV(void)
 }										  
 void SpiRead(INT8U addr,INT8U *buf,INT8U n,INT8U sel)
 {
-	INT8U i;
+	static INT8U lock=0;
+	INT8U i;	
+	while(lock)
+		OSTimeDly(2);
+	lock++;
+
 	SPI_I2S_ReceiveData(SPI_AF);//clear
 	switch(sel){
 		case SPI_CS_HMC0:	 GPIO_ResetBits(SPI_CS0_PORT,SPI_CS0_PIN);  break;
@@ -986,6 +991,7 @@ void SpiRead(INT8U addr,INT8U *buf,INT8U n,INT8U sel)
 		case SPI_CS_HMC1:	 GPIO_SetBits(SPI_CS12_PORT,SPI_CS1_PIN); break;
 		case SPI_CS_ADXL:	 GPIO_SetBits(SPI_CS12_PORT,SPI_CS2_PIN); break;
 	 }
+	lock--;
 }
 void SpiWrite(INT8U addr,INT8U *buf,INT8U n,INT8U sel)
 {
@@ -1019,6 +1025,8 @@ void ADXL_init(void)
 	buf[1]=ADXL_POWER_ON;
 	buf[2]=ADXL_DATA_RD;	 //data reday 
 	SpiWrite(ADXL_BW_RATE,buf,3,SPI_CS_ADXL);
+	buf[0]=0x7b;//需要修改自动检测
+	SpiWrite(ADXL_XOFF,buf,1,SPI_CS_ADXL);
 }
 void HMC_init(void)
 {
