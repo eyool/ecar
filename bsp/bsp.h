@@ -21,7 +21,12 @@ typedef struct _RFID{
 	INT8U  area,n_idcmd;
 	IDCMD  p_idcmd;
 }RFID;
+typedef struct _SYSSET{
+	INT8S g_offx,g_offy,g_offz,rev;
+	INT16S	 hmc_off;
+	INT16U rfid;
 
+}SYSSET;
 
 
 
@@ -395,5 +400,7 @@ void UhfidSwitch(INT8U cmd);
 INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len);
 
 IDCMD *FindUhfidCmd(RFID *p_rfid);
+
+void SaveSysSet(void);
 //api end
 #endif

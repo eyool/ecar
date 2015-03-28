@@ -31,7 +31,7 @@ void App_init(void)
 	Systbuf=LvSystbuf+8;
 	memset((void *)m_sensor,0,sizeof(m_sensor));
 	memset((void *)&m_car,0,sizeof(CAR));
-	m_car.addr=GetAddr();
+	m_car.cid=GetAddr();
 	m_car.status=CAR_STATUS_NULL;
 //	p_rfid=NULL;
 	OSTimeDly(2);
@@ -243,7 +243,7 @@ void SensorProc(void)
 		m_car.pos=POSMODIFY(tmp);
 		if(m_car.p_rfid[0])
 			m_car.pos+=m_car.p_rfid[0]->pos;
-		
+		ReportPos(m_car.pos);
 	//Wifi_send((INT8U *)buf,18);
 	OSTimeDly(10);
 }
@@ -330,6 +330,9 @@ void NetCmdProc(INT8U *buf,INT8U len)
 	sn=GetCmd(buf,&rbuf,&sp,len);
 	while(sn){
 		switch(*rbuf){
+			case C_PC_POS:
+
+				break;
 			case C_PC_CFG_MD5://cmd(1)+data(n)
 				GetCfgMd5(mbuf);
 				if(memcmp((INT8U *)mbuf,rbuf+1,16)&&*(INT32U *)(rbuf+17)==PROGRAMM_KEY){//不一样，从新下载
@@ -386,6 +389,33 @@ void NetCmdProc(INT8U *buf,INT8U len)
 			case C_CAR_UNREG:
 				for (i=1;i<sn;i++)
 					UnRegisterCar(rbuf[i]);
+				break;
+			case C_PC_G_ADJUST:
+					SaveSysSet();
+				break;
+			case C_PC_ACT_RUN:
+				
+				break;
+			case C_PC_ACT_TURN:
+				if((INT8S)rbuf[1]>0)
+					TurnLeft();
+				else{
+					TurnRight();
+					rbuf[1]=-(INT8S)rbuf[1];
+				}
+				SetMotorSpd(MOTOR_TURN,rbuf[1]>>3);
+				break;
+			case C_PC_ACT_TILT:
+				if((INT8S)rbuf[1]>0){
+					CloseDownRelay();
+					OpenUpRelay();
+				}
+				else{
+					CloseUpRelay();
+					OpenDownRelay();
+					rbuf[1]=-(INT8S)rbuf[1];
+				}
+				SetMotorSpd(MOTOR_TILT,rbuf[1]>>3);
 				break;
 		}
 		sn=GetCmd(buf,&rbuf,&sp,len);	
@@ -559,4 +589,26 @@ INT32U GetFrontDis(void)
 		if(m_car.allcarid[i]&&m_car.pos<m_car.allcarpos[i]&&dis>m_car.allcarpos[i]-m_car.pos)
 				dis=m_car.allcarpos[i]-m_car.pos;
 	return dis;
+}
+
+#define RP_DT	500
+#define RP_DP	50
+void ReportPos(INT32U pos)
+{
+	static INT32U ltick=0;
+	static INT32U lpos=0;
+	INT32U ntick=OSTimeGet();
+	if(ntick-ltick>RP_DT||pos-lpos>RP_DP){
+		if(GetKey()&KEY_JOIN)
+			Systbuf[0]=C_CAR_REG;
+		else
+			Systbuf[0]=C_CAR_UNREG;
+		Systbuf[1]=m_car.cid;
+		*(INT32U *)(Systbuf+2)=pos;
+//		if(ntick-ltick>RP_DT)
+			ltick=ntick;
+//		if(pos-lpos>RP_DP)
+			lpos=pos;
+		NetSend(6,NET_CHL_ALL);
+	}
 }

@@ -16,7 +16,7 @@ INT8U DevAddr,IsCenter;
 INT16U ADC_CAL;
 INT32U WifiLinkTime=0,ZigbeeLinkTime=0;
 INT8U Status_Wifi=0,NRst_Wifi=0;
-
+SYSSET m_sysset;
 //INT16U  ADC_RegularConvertedValueTab[ADC_N_CH];
 //INT16U  ADC_samplebuf[ADC_N_CH];
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
@@ -98,6 +98,7 @@ void  BSP_Init (void)
 		Spd_Motor_cn[i]=0;
 	}
 	IsCenter=0;
+	memcpy((INT8U *)&m_sysset,(INT8U *)SYSSET_ADDR,sizeof(m_sysset));
 	
 	GPIO_Configuration();
 	WIFI_init();
@@ -1025,8 +1026,10 @@ void ADXL_init(void)
 	buf[1]=ADXL_POWER_ON;
 	buf[2]=ADXL_DATA_RD;	 //data reday 
 	SpiWrite(ADXL_BW_RATE,buf,3,SPI_CS_ADXL);
-	buf[0]=0x7b;//需要修改自动检测
-	SpiWrite(ADXL_XOFF,buf,1,SPI_CS_ADXL);
+	buf[0]=m_sysset.g_offx ;//
+	buf[1]=m_sysset.g_offy ;//
+	buf[2]=m_sysset.g_offz ;
+	SpiWrite(ADXL_XOFF,buf,3,SPI_CS_ADXL);
 }
 void HMC_init(void)
 {
@@ -1289,4 +1292,12 @@ IDCMD *FindUhfidCmd(RFID *p_rfid)
 	if(p_rfid->n_idcmd<=++n_cmd)
 		n_cmd=0;
 	return p_ic;
+}
+void SaveSysSet(void)
+{
+	FLASH_Unlock();
+	FLASH_If_Erase(SYSSET_ADDR);
+	FLASH_If_Write(SYSSET_ADDR,(INT8U *)&m_sysset,sizeof(m_sysset));
+	FLASH_Lock();	
+
 }
