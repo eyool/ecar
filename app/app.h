@@ -64,12 +64,15 @@ typedef struct _CAR{
 //#define C_PC_CFG_MD5_OK		1 
 #define C_PC_CFG_DL			3 
 #define C_PC_CFG_JOIN		4 
-#define C_CAR_REG				5 
+#define C_CAR_REG			5 
 #define C_CAR_UNREG			6 
 #define C_PC_G_ADJUST		7
 #define C_PC_ACT_RUN		8
 #define C_PC_ACT_TURN		9
 #define C_PC_ACT_TILT		10
+#define C_PC_SENSOR			11
+
+#define C_PC_HEART		   0xff
 
 #define C_PC_CFG_DL_ERR		0xffff 
 #define C_PC_CFG_DL_OK		0xfffe 

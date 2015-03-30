@@ -47,7 +47,7 @@ void App_init(void)
 		OSTimeDly(50);			
 	}
 	
-#define TEST 1	
+//#define TEST 1	
 #ifndef	TEST	
 	if(CheckSelf()){	
 		while(!DowloadCFG()){
@@ -167,7 +167,7 @@ void AppRunProc(void  *p_msg)
 					Systbuf[0]=C_PC_CFG_JOIN;
 					Systbuf[1]=1;
 					NetSend(2,NET_CHL_ALL);
-					OSTimeDly(500);
+					OSTimeDly(1000);
 				}
 				break;
 			case CAR_STATUS_JOIN:
@@ -394,7 +394,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					SaveSysSet();
 				break;
 			case C_PC_ACT_RUN:
-				
+					AdjustMotorSpd(rbuf[2]&3,(INT8S)rbuf[1]);
 				break;
 			case C_PC_ACT_TURN:
 				if((INT8S)rbuf[1]>0)
@@ -416,6 +416,11 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					rbuf[1]=-(INT8S)rbuf[1];
 				}
 				SetMotorSpd(MOTOR_TILT,rbuf[1]>>3);
+				break;
+			case C_PC_SENSOR:
+				Systbuf[0]=C_PC_SENSOR;
+				memcpy(Systbuf+1,(INT8U *)&m_sensor[0],sizeof(m_sensor)>>1);
+				NetSend((sizeof(m_sensor)>>1)+1,NET_CHL_ALL);
 				break;
 		}
 		sn=GetCmd(buf,&rbuf,&sp,len);	

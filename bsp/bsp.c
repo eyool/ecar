@@ -904,6 +904,8 @@ INT16U GetMotorSpd(INT8U chl)
 *******************************************/
 INT32U GetMotorPoscn(INT8U chl)
 {
+	if(chl==3)//速度和捕获通道不一致调整
+		chl=1;
 	return Spd_Motor_cn[chl];
 }
 /*******************************************
