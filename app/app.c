@@ -4,12 +4,14 @@
 #include "math.h"
 
 INT8U LvSystbuf[SYS_TBUF_LEN+8];//系统临时缓存
-
+INT8U Sysrbuf[SYS_RBUF_LEN];
 INT8U *Systbuf;
 INT32U G_msg[5];
 //INT32U SysStatus,
 INT8U b_debug=0,sw_power=0;
 SENSOR m_sensor[2];//0,当前，1，保留上次
+INT32U lastsendtime=0;
+
 //RFID *p_rfid;
 CAR m_car;
 //----------
@@ -125,14 +127,18 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 	//----------------------------
 	if(!debugcmd){
 		if(chl==UART_CHL_WIFI){
-			if(IsNetData(buf,len))
-					NetCmdProc(buf,len);
+			if(IsNetData(buf,len)){
+				memcpy(Sysrbuf,buf,len>SYS_RBUF_LEN?SYS_RBUF_LEN:len);
+				NetCmdProc(Sysrbuf,len);
+			}
 			SetWifiLinkTime();			
 			Debug(buf,len);
 		}		
 		else if(chl==UART_CHL_ZIGBEE){
-					if(IsNetData(buf,len))
-							NetCmdProc(buf,len);
+			if(IsNetData(buf,len)){
+					memcpy(Sysrbuf,buf,len>SYS_RBUF_LEN?SYS_RBUF_LEN:len);
+					NetCmdProc(Sysrbuf,len);
+			}
 					SetZigbeeLinkTime();					
 		}
 		else if(chl==UART_CHL_UHFID){
@@ -155,7 +161,7 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 //任务函数 3/4
 void AppRunProc(void  *p_msg)
 {
-//	INT8U buf[4];
+ 	INT32U tmp;
 	if(!p_msg){
 		OSTimeDly(20);
 		switch(m_car.status){
@@ -172,9 +178,23 @@ void AppRunProc(void  *p_msg)
 				break;
 			case CAR_STATUS_JOIN:
 				sw_power=1;
-				if(m_car.p_rfid[0])
-					if(m_car.p_rfid[0]->id)
-						m_car.status=CAR_STATUS_RUN;
+				CloseRunBreak();
+				if(m_car.p_rfid[0]&&m_car.p_rfid[0]->id){
+					m_car.status=CAR_STATUS_RUN;
+					SetMotorSpd(MOTOR_RL,0);
+					SetMotorSpd(MOTOR_RR,0);
+				}
+				else{//找卡
+					if(m_car.pos<CAR_CHECK_POS){
+						AdjustMotorSpd(MOTOR_RL,1);
+						AdjustMotorSpd(MOTOR_RR,1);
+					}
+					else{
+						AdjustMotorSpd(MOTOR_RL,-5);
+						AdjustMotorSpd(MOTOR_RR,-5);							
+					}
+
+				}
 				break;
 			case CAR_STATUS_RUN:
 				if(m_car.p_rfid[0]){
@@ -243,7 +263,13 @@ void SensorProc(void)
 		m_car.pos=POSMODIFY(tmp);
 		if(m_car.p_rfid[0])
 			m_car.pos+=m_car.p_rfid[0]->pos;
-		ReportPos(m_car.pos);
+		if(m_car.status==CAR_STATUS_RUN)
+			ReportPos(m_car.pos);
+		else if(m_car.status!=CAR_STATUS_INIT&&OSTimeGet()-lastsendtime>TIMEOV_HEART){
+					Systbuf[0]=C_PC_HEART;
+					NetSend(1,NET_CHL_ALL);
+				}
+
 	//Wifi_send((INT8U *)buf,18);
 	OSTimeDly(10);
 }
@@ -298,7 +324,7 @@ void NetSend(INT8U len,INT8U chl)
 			Wifi_send(bp,len+6);
 	if(chl&NET_CHL_ZIGBEE)
 			Zigbee_send(bp,len+6);	
-	
+	lastsendtime=OSTimeGet();
 }
 
 INT8U DowloadCFG(void)
@@ -349,7 +375,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					G_msg[1]=C_PC_CFG_DL_OK;	
 					OSMboxPost(App_StartMbox, (void *)G_msg);
 				}
-			break;
+				break;
 			case C_PC_CFG_DL://cmd(1)+index(2)+data(n)
 					if(*(INT16U *)(rbuf+1)==C_PC_CFG_DL_ERR||*(INT16U *)(rbuf+1)==C_PC_CFG_DL_OK){
 						if(*(INT16U *)(rbuf+1)==C_PC_CFG_DL_OK&&b_dl)
@@ -377,7 +403,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 						}
 						
 					}											
-			break;	
+				break;	
 			case C_PC_CFG_JOIN:
 				if(rbuf[1])
 					m_car.status=CAR_STATUS_JOIN;
@@ -432,6 +458,12 @@ void NetCmdProc(INT8U *buf,INT8U len)
 				memcpy(Systbuf+1,(INT8U *)&m_sensor[0],sizeof(m_sensor)>>1);
 				NetSend((sizeof(m_sensor)>>1)+1,NET_CHL_ALL);
 				break;
+			case C_PC_MEM:
+				Systbuf[0]=C_PC_MEM;
+				memcpy(Systbuf+1,(INT8U *)(0x20000000+(*(INT32U *)(rbuf+2)&0x3fff)),rbuf[1]&0x1f);
+				NetSend((rbuf[1]&0x1f)+1,NET_CHL_ALL);
+				break;
+
 		}
 		sn=GetCmd(buf,&rbuf,&sp,len);	
 	}

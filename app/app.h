@@ -52,7 +52,8 @@ typedef struct _CAR{
 #define MOTOR_TURN  0
 #define MOTOR_TILT    1
 //#define PROC_DTIME  		50
-#define SYS_TBUF_LEN			1040
+#define SYS_TBUF_LEN			248
+#define SYS_RBUF_LEN			512
 //
 #define NET_CHL_WIFI  		1
 #define NET_CHL_ZIGBEE	  2
@@ -72,7 +73,9 @@ typedef struct _CAR{
 #define C_PC_ACT_TILT		10
 #define C_PC_SENSOR			11
 
+#define C_PC_MEM		   0xfe
 #define C_PC_HEART		   0xff
+#define TIMEOV_HEART	   2000
 
 #define C_PC_CFG_DL_ERR		0xffff 
 #define C_PC_CFG_DL_OK		0xfffe 
@@ -98,9 +101,11 @@ typedef struct _CAR{
 #define CAR_AREA_BACK			4
 #define CAR_AREA_STOP			5
 #define CAR_AREA_GETON			6
+
+#define CAR_CHECK_POS			30
 //-----------------------
-#define POSMODIFY(a)  (a*2>>8)/*需要实际测试修正*/
-#define SPDMODIFY(a)  (a*2>>8)
+#define POSMODIFY(a)  ((INT32U)a*259>>9)/*需要实际测试修正*/
+#define SPDMODIFY(a)  ((INT32U)a*21>>10)
 void App_init(void);
 void MSDelay(UINT ms);//参数：ms
 void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len);

@@ -152,7 +152,8 @@ void GPIO_Configuration(void)
   GPIO_Init(SAFELINEPS_PORT, &GPIO_InitStructure);  
   GPIO_SetBits(SAFELINEPS_PORT,SAFELINEPS_PIN);
 	//得到地址
-	DevAddr=GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_5)|((GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_2))<<1)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_4))<<2)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_5))<<3);
+  uDelay(150);
+  DevAddr=GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_5)|((GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_2))<<1)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_4))<<2)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_5))<<3);
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5; //2,3
   GPIO_Init(GPIOC, &GPIO_InitStructure); 	
@@ -880,16 +881,19 @@ void MemCpy(INT8U *src,INT8U *dst,INT8U n)
 //api
 /*******************************************
 *	chl=0,1,2
-*	return 0-1000 每秒脉冲数放大10倍
+*	return 0-1000 每秒脉冲数放大16倍
 *******************************************/
 INT16U GetMotorSpd(INT8U chl)
 {
 	static INT16U lastre[4];
 	INT16U re=0,tmp;
+
+	if(chl==3)//速度和捕获通道不一致调整
+		chl=1;
 	if(chl>=4)
 		chl=(chl>>2)&3;
 	if(Spd_Motor[chl])
-		re=(SPDCAP_FREQ*10)/Spd_Motor[chl];
+		re=(SPDCAP_FREQ<<4)/Spd_Motor[chl];
 	if(re>1000)
 		re=1000;
 	tmp=(re+lastre[chl])>>1;

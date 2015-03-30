@@ -206,7 +206,7 @@ typedef struct _SYSSET{
 //#define	DEVADDRB_PORT           			 GPIOB
 //#define	DEVADDRC_PORT           			 GPIOC
 //esp8266  
-#define WIFI_LINK_OK			1
+#define WIFI_LINK_OK		1
 #define WIFI_ST_OK			2
 #define WIFI_OVTETIME   10000
 #define WIFI_NRST    		5
