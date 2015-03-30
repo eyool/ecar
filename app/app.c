@@ -394,16 +394,26 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					SaveSysSet();
 				break;
 			case C_PC_ACT_RUN:
-					AdjustMotorSpd(rbuf[2]&3,(INT8S)rbuf[1]);
+				if((rbuf[2]&3)>=MOTOR_RL){
+					if(rbuf[3])
+						OpenRunBreak();
+					else
+						CloseRunBreak();
+				}
+				AdjustMotorSpd(rbuf[2]&3,(INT8S)rbuf[1]);
 				break;
 			case C_PC_ACT_TURN:
 				if((INT8S)rbuf[1]>0)
 					TurnLeft();
 				else{
 					TurnRight();
-					rbuf[1]=-(INT8S)rbuf[1];
+					//rbuf[1]=-(INT8S)rbuf[1];
 				}
-				SetMotorSpd(MOTOR_TURN,rbuf[1]>>3);
+				if(rbuf[2])
+					OpenTurnBreak();
+				else
+					CloseTurnBreak();
+				//SetMotorSpd(MOTOR_TURN,rbuf[1]>>3);
 				break;
 			case C_PC_ACT_TILT:
 				if((INT8S)rbuf[1]>0){
@@ -413,9 +423,9 @@ void NetCmdProc(INT8U *buf,INT8U len)
 				else{
 					CloseUpRelay();
 					OpenDownRelay();
-					rbuf[1]=-(INT8S)rbuf[1];
+					//rbuf[1]=-(INT8S)rbuf[1];
 				}
-				SetMotorSpd(MOTOR_TILT,rbuf[1]>>3);
+				//SetMotorSpd(MOTOR_TILT,rbuf[1]>>3);
 				break;
 			case C_PC_SENSOR:
 				Systbuf[0]=C_PC_SENSOR;
@@ -593,6 +603,11 @@ INT32U GetFrontDis(void)
 	for (;i<CAR_MAX;i++)
 		if(m_car.allcarid[i]&&m_car.pos<m_car.allcarpos[i]&&dis>m_car.allcarpos[i]-m_car.pos)
 				dis=m_car.allcarpos[i]-m_car.pos;
+	if(m_car.p_rfid[0]&&dis==0xffffffff&&m_car.p_rfid[0]->area==CAR_AREA_GETON){
+		for (i=0;i<CAR_MAX;i++)
+			if(m_car.allcarid[i]&&dis>m_car.allcarpos[i])
+				dis=m_car.allcarpos[i];
+	}
 	return dis;
 }
 
