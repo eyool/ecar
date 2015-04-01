@@ -62,6 +62,7 @@ void App_init(void)
 #endif	
 //	test();
 	m_car.status=CAR_STATUS_INIT;
+	UhfidSwitch(UHFID_CMD_OPEN);
 }
 //--------------------
 void nopf(void)
@@ -82,8 +83,11 @@ void MSDelay(UINT ms)//参数：ms
 //主任务函数1/4
 void MainTaskProc(void *p_msg)
 {
+	UINT ct=OSTimeGet();  
 	if(p_msg==0){
 		SW_Power();
+		if ((ct&0xfff)==0)
+			UhfidSwitch(UHFID_CMD_OPEN);
 		//----------------------------
 		if(!b_debug)
 			WifiLink();//让wifi断线从新连接
@@ -146,6 +150,8 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 				pid=GetRfidStruct(*(INT32U *)buf&RDID_BITS);
 				if(pid){
 					if(pid!=m_car.p_rfid[0]&&pid!=m_car.p_rfid[1]){
+						m_car.rfid=*(INT32U *)buf&RDID_BITS;
+						m_car.RSSI=*(INT8S *)(buf+5);
 						m_car.p_rfid[1]=m_car.p_rfid[0];
 						m_car.p_rfid[0]=pid;
 						m_car.l_tick=OSTimeGet();  
@@ -169,9 +175,9 @@ void AppRunProc(void  *p_msg)
 
 				break;
 			case CAR_STATUS_INIT:
-				if(!m_car.err&&(GetKey()&KEY_JOIN)){
+				if(!m_car.err){
 					Systbuf[0]=C_PC_CFG_JOIN;
-					Systbuf[1]=1;
+					Systbuf[1]=GetKey()&KEY_JOIN;
 					NetSend(2,NET_CHL_ALL);
 					OSTimeDly(1000);
 				}
@@ -264,7 +270,7 @@ void SensorProc(void)
 		if(m_car.p_rfid[0])
 			m_car.pos+=m_car.p_rfid[0]->pos;
 		if(m_car.status==CAR_STATUS_RUN)
-			ReportPos(m_car.pos);
+			ReportPos(m_car.pos,m_car.rfid);
 		else if(m_car.status!=CAR_STATUS_INIT&&OSTimeGet()-lastsendtime>TIMEOV_HEART){
 					Systbuf[0]=C_PC_HEART;
 					NetSend(1,NET_CHL_ALL);
@@ -316,7 +322,7 @@ void NetSend(INT8U len,INT8U chl)
 	INT8U *bp=Systbuf-4;
 	bp[0]=FRAME_HEAD;
 	bp[1]=len+4;
-	bp[2]=GetAddr();	
+	bp[2]=m_car.cid;	
 	bp[3]=FRAME_BROAD;	
 	bp[len+4]=CheckSum8(bp,len+4);
 	bp[len+5]=FRAME_END;	
@@ -408,7 +414,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 				if(rbuf[1])
 					m_car.status=CAR_STATUS_JOIN;
 				break;
-			case C_CAR_REG:
+			case C_CAR_REGPOS:
 				for (i=1;i<sn;i+=5)
 					RegisterCar(rbuf[i],*(INT32U *)(rbuf+i+1));							
 				break;
@@ -645,22 +651,23 @@ INT32U GetFrontDis(void)
 
 #define RP_DT	500
 #define RP_DP	50
-void ReportPos(INT32U pos)
+void ReportPos(INT32U pos,INT16U rdif)
 {
 	static INT32U ltick=0;
 	static INT32U lpos=0;
 	INT32U ntick=OSTimeGet();
 	if(ntick-ltick>RP_DT||pos-lpos>RP_DP){
 		if(GetKey()&KEY_JOIN)
-			Systbuf[0]=C_CAR_REG;
+			Systbuf[0]=C_CAR_REGPOS;
 		else
 			Systbuf[0]=C_CAR_UNREG;
-		Systbuf[1]=m_car.cid;
-		*(INT32U *)(Systbuf+2)=pos;
+		//Systbuf[1]=m_car.cid;
+		*(INT32U *)(Systbuf+1)=pos;
+		*(INT16U *)(Systbuf+5)=rdif;
 //		if(ntick-ltick>RP_DT)
-			ltick=ntick;
+		ltick=ntick;
 //		if(pos-lpos>RP_DP)
-			lpos=pos;
-		NetSend(6,NET_CHL_ALL);
+		lpos=pos;
+		NetSend(7,NET_CHL_ALL);
 	}
 }

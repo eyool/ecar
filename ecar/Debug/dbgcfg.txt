@@ -14,4 +14,4 @@
 倾斜方向-(命令+方向)		:f0 ff 0a ff
 传感器				:f0 ff 0b
 m_car				:f0 04 fe 0c 5c 14
-m_car->p_rfid			:f0 04 fe 0d bC 14
+m_car->p_rfid			:f0 04 fe 10 bc 14

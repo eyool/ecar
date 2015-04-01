@@ -1,36 +1,36 @@
 <?xml version="1.0"?>
 <root>
 	<hid>
-		<id1 pos="0" area="1" safedis="1000" id="1"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id1>
+		<id1 pos="0" id="0" area="1" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id1>
 		<id2 pos="100" id="100" area="1" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1></id2>
 		<id3 pos="200" id="200" area="1" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1></id3>
 		<id4 pos="300" id="300" area="1" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1></id4>
-		<id5 pos="400" id="400" area="1" safedis="1000"><cmd1 spd="50" dis="10000" cmd="r"></cmd1><cmd3 dis="50" spd="75" tick="100" cmd="a" type="1"/></id5>
+		<id5 pos="400" id="400" area="1" safedis="1000"><cmd1 spd="50" dis="10000" cmd="r"></cmd1></id5>
 		<id6 pos="500" id="500" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id6>
 		<id7 pos="600" id="600" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id7>
 		<id8 pos="700" id="700" area="2" safedis="1000"><cmd1 spd="60" dis="10000" cmd="r"></cmd1></id8>
 		<id9 pos="800" id="800" area="2" safedis="1000"><cmd1 spd="30" dis="10000" cmd="r"></cmd1></id9>
 		<id10 pos="900" id="900" area="2" safedis="1000"><cmd1 spd="10" dis="10000" cmd="r"></cmd1></id10>
-		<id11 pos="1000" id="1000" area="2" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1><cmd2 dis="900" spd="80" tick="100" cmd="t"/><cmd4 tick="100" cmd="p"></cmd4></id11>
+		<id11 pos="1000" id="1000" area="2" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1><cmd2 dis="900" spd="80" tick="100" cmd="t" runtime="100"/><cmd4 tick="300" runtime="2000" cmd="p"></cmd4><cmd5 dis="-900" spd="80" tick="3000" cmd="t" runtime="100"/></id11>
 		<id12 pos="1200" id="1200" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id12>
 		<id13 pos="1400" id="1400" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id13>
 		<id14 pos="1600" id="1600" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id14>
-		<id15 pos="1800" id="1800" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1><cmd3 dis="50" spd="75" tick="100" cmd="a" type="1"/></id15>
+		<id15 pos="1800" id="1800" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1><cmd3 dis="50" spd="75" tick="100" cmd="a" runtime="100" type="1"/><cmd3 dis="-50" spd="75" tick="100" cmd="a" runtime="100" type="1"/></id15>
 		<id16 pos="2000" id="2000" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id16>
 		<id17 pos="2100" id="2100" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id17>
 		<id18 pos="2200" id="2200" area="2" safedis="1000"><cmd1 spd="60" dis="10000" cmd="r"></cmd1></id18>
 		<id19 pos="2300" id="2300" area="2" safedis="1000"><cmd1 spd="30" dis="10000" cmd="r"></cmd1></id19>
 		<id20 pos="2400" id="2400" area="2" safedis="1000"><cmd1 spd="10" dis="10000" cmd="r"></cmd1></id20>
-		<id21 pos="2500" id="2500" area="2" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1><cmd2 dis="900" spd="80" tick="100" cmd="t"/><cmd3 dis="50" spd="75" tick="100" cmd="a" type="1"/><cmd4 tick="100" cmd="p"></cmd4></id21>
+		<id21 pos="2500" id="2500" area="2" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1><cmd2 dis="900" spd="80" tick="100" runtime="100" cmd="t"/><cmd4 tick="300" cmd="p"></cmd4><cmd5 dis="900" spd="80" tick="3000" runtime="100" cmd="t"/></id21>
 		<id22 pos="2600" id="2600" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id22>
 		<id23 pos="2800" id="2800" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id23>
 		<id24 pos="3000" id="3000" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id24>
 		<id25 pos="3200" id="3200" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id25>
-		<id26 pos="3300" id="3300" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1><cmd3 dis="50" spd="75" tick="100" cmd="a" type="1"/></id26>
+		<id26 pos="3300" id="3300" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1><cmd3 dis="50" spd="75" tick="100" cmd="a" runtime="100" type="1"/><cmd3 dis="-50" spd="75" tick="100" cmd="a" runtime="100" type="1"/></id26>
 		<id27 pos="3400" id="3400" area="2" safedis="1000"><cmd1 spd="60" dis="10000" cmd="r"></cmd1></id27>
 		<id28 pos="3500" id="3500" area="2" safedis="1000"><cmd1 spd="30" dis="10000" cmd="r"></cmd1></id28>
 		<id29 pos="3600" id="3600" area="2" safedis="1000"><cmd1 spd="10" dis="10000" cmd="r"></cmd1></id29>
-		<id30 pos="3700" id="3700" area="2" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1><cmd2 dis="900" spd="80" tick="100" cmd="t"/><cmd4 tick="100" cmd="p"></cmd4></id30>
+		<id30 pos="3700" id="3700" area="2" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1><cmd2 dis="900" spd="80" tick="100" runtime="100" cmd="t"/><cmd4 tick="300" cmd="p"></cmd4><cmd5 dis="900" spd="80" tick="3000" runtime="100" cmd="t"/></id30>
 		<id31 pos="3800" id="3800" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id31>
 		<id32 pos="4000" id="3900" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id32>
 		<id33 pos="4200" id="4200" area="2" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id33>

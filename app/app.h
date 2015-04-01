@@ -33,8 +33,9 @@ typedef struct _CAR{
 	INT32U allcarpos[CAR_MAX];
 //	INT16S st_angle,st_turn,st_run;
 	RFID *p_rfid[2];/*±£´æ2´Î¿¨ID*/ 
-	INT16U spd;
+	INT16U spd,rfid;
 	INT8U cid,status,err;
+	INT8S RSSI;
 }CAR;
 
 
@@ -65,7 +66,7 @@ typedef struct _CAR{
 //#define C_PC_CFG_MD5_OK		1 
 #define C_PC_CFG_DL			3 
 #define C_PC_CFG_JOIN		4 
-#define C_CAR_REG			5 
+#define C_CAR_REGPOS			5 
 #define C_CAR_UNREG			6 
 #define C_PC_G_ADJUST		7
 #define C_PC_ACT_RUN		8
@@ -126,5 +127,5 @@ void SW_Power(void);
 int   RegisterCar(INT8U id,INT32U pos);
 void UnRegisterCar(INT8U id);
 INT32U GetFrontDis(void);
-void ReportPos(INT32U pos);
+void ReportPos(INT32U pos,INT16U rdif);
 #endif
