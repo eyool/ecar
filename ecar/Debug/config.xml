@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <root>
 	<hid>
-		<id1 pos="0" id="0" area="1" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id1>
+		<id1 pos="0" id="1" area="1" safedis="1000"><cmd1 spd="100" dis="10000" cmd="r"></cmd1></id1>
 		<id2 pos="100" id="100" area="1" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1></id2>
 		<id3 pos="200" id="200" area="1" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1></id3>
 		<id4 pos="300" id="300" area="1" safedis="1000"><cmd1 spd="0" dis="10000" cmd="r"></cmd1></id4>
