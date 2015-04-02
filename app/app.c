@@ -147,7 +147,7 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 		}
 		else if(chl==UART_CHL_UHFID){
 				*(INT32U *)buf=ParseUhfid(buf,(INT8S *)(buf+5),len);
-				pid=GetRfidStruct(*(INT32U *)buf&RDID_BITS);
+				pid=GetRfidStruct((buf[0]<<8)|buf[1]);
 				if(pid){
 					if(pid!=m_car.p_rfid[0]&&pid!=m_car.p_rfid[1]){
 						m_car.rfid=*(INT32U *)buf&RDID_BITS;
@@ -384,7 +384,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 				break;
 			case C_PC_CFG_DL://cmd(1)+index(2)+data(n)
 					if(*(INT16U *)(rbuf+1)==C_PC_CFG_DL_ERR||*(INT16U *)(rbuf+1)==C_PC_CFG_DL_OK){
-						if(*(INT16U *)(rbuf+1)==C_PC_CFG_DL_OK&&b_dl)
+						if(*(INT16U *)(rbuf+1)==C_PC_CFG_DL_OK&&b_dl&&CheckCfgSum()==*(INT32U *)(rbuf+3))
 							SetCfgMd5(mbuf);
 						b_dl=0;
 						G_msg[0]=C_PC_CFG_DL;
@@ -605,7 +605,7 @@ void TiltCtrl(IDCMD *p_ic)
 }
 void SW_Power(void)
 {
-	if(sw_power&&(OSTimeGet()&0xff)<50)
+	if(sw_power&&(OSTimeGet()&0x7f)<30)
 		SetSafeLine();
 	else
 		ResetSafeLine();

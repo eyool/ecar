@@ -285,6 +285,7 @@ void GetCfgMd5(INT32U *buf);
 void SetCfgMd5(INT32U *buf);
 void CfgClear(void);
 INT16U CfgWriteId(INT8U *buf,INT8U len);
+INT32U CheckCfgSum(void);
 
 /**********************************************************************************************************
 *api  系统提供API ，供应应用程序调用

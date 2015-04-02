@@ -1205,6 +1205,19 @@ void SetCfgMd5(INT32U *buf)
 	FLASH_If_Write(CFGSYS_FLASH_CFG_MD5,(INT8U *)buf,16);
 	FLASH_Lock();	
 }
+INT32U CheckCfgSum(void)
+{
+	INT32U re=0,n=0,addr;
+	for(addr=CFGSYS_FLASH_CFG_NP;addr<CFGSYS_FLASH_CFG_BODY-4;addr+=4){
+		if(*(INT16U *)addr!=0xffff){
+			re+=CheckSum8((INT8U *)(CFGSYS_FLASH_CFG_BODY+*(INT16U *)addr),*(INT8U *)(addr+2));	
+			n++;
+		}
+		else	
+			break;
+	}
+	return (re&0xfffff)|(n<<20);
+}
 void CfgClear(void)
 {
 	INT32U addr=CFGSYS_FLASHADDR_START;
