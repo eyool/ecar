@@ -936,7 +936,6 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		sspd=100;
 	if(sspd<0)
 		sspd=0;	
-	sspd=
 	sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 
 	switch(chl){
