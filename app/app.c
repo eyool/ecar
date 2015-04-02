@@ -485,20 +485,23 @@ INT8U CheckSelf(void)
 void RunCmdProc(RFID *p_rfid)
 {
 	int i;
+	INT32U dt;
 	if(p_rfid){
 		for (i=0;i<p_rfid->n_idcmd;i++){
 			IDCMD *p_ic = FindUhfidCmd(p_rfid);
+			dt=OSTimeGet()-m_car.l_tick;
+			if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 			switch(p_ic->cmd){
 					case  CAR_CMD_RUN:
-						if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						//if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							RunCtrl(p_ic);
 						break;
 					case 	CAR_CMD_TURN:
-						if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						//if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TurnCtrl(p_ic);
 						break;
 					case 	CAR_CMD_ANGLE:
-						if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						//if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TiltCtrl(p_ic);
 						break;
 					case 	CAR_CMD_PLAY:

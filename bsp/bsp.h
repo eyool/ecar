@@ -144,7 +144,7 @@ typedef struct _SYSSET{
 #define HMC_TPOUTM 	0x31  /*Temperature Output MSB Register r	*/
 #define HMC_TPOUTL 	0x32  /*Temperature Output LSB Register r	 */
 //ËÙ¶È²¶»ñ
-#define SPDCAP_FREQ				2000
+#define SPDCAP_FREQ				8000
 #define SPDCAP_TIM				TIM4
 #define SPDCAP_RCC_APB1			RCC_APB1Periph_TIM4
 #define SPDCAP_PORT_RCC_APB2	RCC_APB2Periph_GPIOB

@@ -829,7 +829,7 @@ void SpdCap_Istr(INT8U chl,INT16U cn)
 	static INT16U lastcap[4]={0,0,0,0};
 	INT32U tick=OSTimeGet();
 	chl=(chl>>2)&3;
-	if(tick>lasttick[chl]+8000)	//8s 无脉冲认为停止
+	if(tick>lasttick[chl]+4000)	//4s 无脉冲认为停止
 		Spd_Motor[chl]=0xffff;
 	else if(cn>=lastcap[chl])
 			Spd_Motor[chl]=cn-lastcap[chl];
@@ -881,7 +881,7 @@ void MemCpy(INT8U *src,INT8U *dst,INT8U n)
 //api
 /*******************************************
 *	chl=0,1,2
-*	return 0-1000 每秒脉冲数放大16倍
+*	return 0-1000 每秒脉冲数放大8倍
 *******************************************/
 INT16U GetMotorSpd(INT8U chl)
 {
@@ -893,13 +893,13 @@ INT16U GetMotorSpd(INT8U chl)
 	if(chl>=4)
 		chl=(chl>>2)&3;
 	if(Spd_Motor[chl])
-		re=(SPDCAP_FREQ<<4)/Spd_Motor[chl];
-	if(re>1000)
-		re=1000;
+		re=(SPDCAP_FREQ<<3)/Spd_Motor[chl];
+	if(re>10000)
+		re=10000;
 	tmp=(re+lastre[chl])>>1;
 	lastre[chl]=re;
     //这里的数度需要处理成0-100
-    tmp>>=2;
+    //tmp>>=2;
 	return tmp;
 }
 /*******************************************

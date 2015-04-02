@@ -106,7 +106,7 @@ typedef struct _CAR{
 #define CAR_CHECK_POS			30
 //-----------------------
 #define POSMODIFY(a)  ((INT32U)a*259>>9)/*需要实际测试修正*/
-#define SPDMODIFY(a)  ((INT32U)a*21>>10)
+#define SPDMODIFY(a)  ((INT32U)a*2>>5)
 void App_init(void);
 void MSDelay(UINT ms);//参数：ms
 void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len);
