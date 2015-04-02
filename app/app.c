@@ -192,14 +192,14 @@ void AppRunProc(void  *p_msg)
 				}
 				else{//’“ø®
 					if(m_car.pos<CAR_CHECK_POS){
-						AdjustMotorSpd(MOTOR_RL,1);
-						AdjustMotorSpd(MOTOR_RR,1);
+						AdjustMotorSpd(MOTOR_RL,1,50);
+						AdjustMotorSpd(MOTOR_RR,1,50);
 					}
 					else{
-						AdjustMotorSpd(MOTOR_RL,-5);
-						AdjustMotorSpd(MOTOR_RR,-5);							
+						AdjustMotorSpd(MOTOR_RL,-10,20);
+						AdjustMotorSpd(MOTOR_RR,-10,20);							
 					}
-
+					OSTimeDly(20);
 				}
 				break;
 			case CAR_STATUS_RUN:
@@ -432,7 +432,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					else
 						CloseRunBreak();
 				}
-				AdjustMotorSpd(rbuf[2]&3,(INT8S)rbuf[1]);
+				AdjustMotorSpd(rbuf[2]&3,(INT8S)rbuf[1],100);
 				break;
 			case C_PC_ACT_TURN:
 				if((INT8S)rbuf[1]>0)
@@ -511,12 +511,23 @@ void RunCmdProc(RFID *p_rfid)
 		}
 	}
 }
-#define SPD_DT_LMT 10
+#define SPD_DT_LMT 5
 void RunCtrl(IDCMD *p_ic)
 {
-    int dspd;//,rspd;
+//		 static INT16S sspd=0;
+     int dspd=0;//,rspd;
+//		static INT16S ldt=0;
+//		int dt;
     //rspd=;m_sensor[0].runspeed[0]+p_ic->spd-m_sensor[0].runspeed[1]>>1;
-    dspd=p_ic->spd-m_car.spd;
+	/*	dt=((int)p_ic->spd-(int)m_car.spd<<4)-ldt*15-1;
+		ldt=p_ic->spd-m_car.spd;	
+			if(dt<0)
+			dspd=0;
+	if(dt>0)	
+			dspd+=dt;
+		else
+			dspd+=(dt<<1);	*/
+		dspd=p_ic->spd-m_car.spd;
     if (dspd>SPD_DT_LMT) 
         dspd=SPD_DT_LMT;
     if (dspd<-SPD_DT_LMT) 
@@ -525,13 +536,30 @@ void RunCtrl(IDCMD *p_ic)
 		if(GetFrontDis()<m_car.p_rfid[0]->safedis)
 			dspd=-SPD_DT_LMT;
 	
-    AdjustMotorSpd(MOTOR_RL,dspd);
-    AdjustMotorSpd(MOTOR_RR,dspd);
+	/*	if(dt>=0)
+			dspd+=(dt&0x3f);
+		else
+			dspd-=((-dt)&0x3f);				
+			if(dspd>=0x40){
+				dt+=0x40;
+				dspd-=0x40;
+			}			
+			else if(dspd<=-0x40){
+				dt-=0x40;
+				dspd+=0x40;	
+			}
+		if(dspd>0)
+			sspd++;
+		else if(dspd<0)
+			sspd--;*/
+		
+    AdjustMotorSpd(MOTOR_RL,2,p_ic->spd);
+    AdjustMotorSpd(MOTOR_RR,2,p_ic->spd);
     
 		
 }
 #define ANGLE_CYCLE   3600
-#define ANGLE_DT      10
+#define ANGLE_DT      1
 #define ANGLE_MAX     1350
 void TurnCtrl(IDCMD *p_ic)
 {
@@ -568,11 +596,11 @@ void TurnCtrl(IDCMD *p_ic)
             dspd=SPD_DT_LMT;
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;
-        AdjustMotorSpd(MOTOR_TURN,dspd);
+        AdjustMotorSpd(MOTOR_TURN,dspd,p_ic->spd);
     }
 }
 #define TILT_MAX    100
-#define TILT_DT    10
+#define TILT_DT    1
 void TiltCtrl(IDCMD *p_ic)
 {
     int dspd,dir=0;
@@ -602,7 +630,7 @@ void TiltCtrl(IDCMD *p_ic)
             dspd=SPD_DT_LMT;
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;
-        AdjustMotorSpd(MOTOR_TILT,dspd);
+        AdjustMotorSpd(MOTOR_TILT,dspd,p_ic->spd);
 
     }
 }

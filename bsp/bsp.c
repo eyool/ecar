@@ -927,27 +927,42 @@ void SetMotorSpd(INT8U chl,INT16U spd)
 		case 3:	TIM_SetCompare4(SPDPWM_TIM,(spd*(SPDPWM_CLK/SPDPWM_FREQ))/100);break;
 	}
 }
-void AdjustMotorSpd(INT8U chl,INT16S spd)
+void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 {
-    int ss;
+  int ss;
  	if(chl>=4)
 		chl=(chl>>2)&3;
+	if(sspd>100)
+		sspd=100;
+	if(sspd<0)
+		sspd=0;	
+	sspd=
+	sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
+
 	switch(chl){
     case 0:	
-        ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+spd;
-        TIM_SetCompare1(SPDPWM_TIM, ss<0?0:(ss&0xffff)); 
+        ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+dspd;
+				if(ss>0&&ss<MOTOR_ZERO_OFF)
+					ss=dspd>0?MOTOR_ZERO_OFF:0;
+      TIM_SetCompare1(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
         break;
     case 1:	
-        ss=(INT16S)TIM_GetCapture2(SPDPWM_TIM)+spd;
-        TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss&0xffff));
+        ss=(INT16S)TIM_GetCapture2(SPDPWM_TIM)+dspd;
+				if(ss>0&&ss<MOTOR_ZERO_OFF)
+					ss=dspd>0?MOTOR_ZERO_OFF:0;
+        TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss));
         break;
     case 2:	
-        ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+spd;
-        TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(ss&0xffff));
+        ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
+				if(ss>0&&ss<MOTOR_ZERO_OFF)
+					ss=dspd>0?MOTOR_ZERO_OFF:0;
+        TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss));
         break;
     case 3:	
-        ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+spd;
-        TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(ss&0xffff));
+        ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
+				if(ss>0&&ss<MOTOR_ZERO_OFF)
+					ss=dspd>0?MOTOR_ZERO_OFF:0;
+        TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss));
         break;
 	}
 }

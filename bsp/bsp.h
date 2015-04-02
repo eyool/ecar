@@ -227,6 +227,8 @@ typedef struct _SYSSET{
 #define UHFID_FINDID_OK   0x002202aa
 #define UHFID_FINDID_ERR  0x00ff01aa
 #define UHFID_FRAME_END   0x8e
+
+#define MOTOR_ZERO_OFF  0x50
 //函数 
 void SetCenter(void);
 
@@ -350,9 +352,10 @@ INT32U GetMotorPoscn(INT8U chl);
 void SetMotorSpd(INT8U chl,INT16U spd); 
 /*******************************************
 *	chl=0,1,2,3
-*	spd 速度调节
+*	dspd 速度调节差值
+* sspd  设定的数度
 *******************************************/
-void AdjustMotorSpd(INT8U chl,INT16S spd); 
+void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd); 
 /*******************************************
 *	得到外部电压
 *******************************************/
