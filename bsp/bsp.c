@@ -1046,10 +1046,12 @@ void ADXL_init(void)
 	buf[1]=ADXL_POWER_ON;
 	buf[2]=ADXL_DATA_RD;	 //data reday 
 	SpiWrite(ADXL_BW_RATE,buf,3,SPI_CS_ADXL);
-	buf[0]=m_sysset.g_offx ;//
-	buf[1]=m_sysset.g_offy ;//
-	buf[2]=m_sysset.g_offz ;
-	SpiWrite(ADXL_XOFF,buf,3,SPI_CS_ADXL);
+//	buf[0]=m_sysset.g_offx ;//
+//	buf[1]=m_sysset.g_offy ;//
+//	buf[2]=m_sysset.g_offz ;
+//	SpiWrite(ADXL_XOFF,buf,3,SPI_CS_ADXL);
+	buf[0]=ADXL_FULL|ADXL_4G;//È«·Ö±æÂÊ 4g
+	SpiWrite(ADXL_DATA_FORMAT,buf,1,SPI_CS_ADXL);	
 }
 void HMC_init(void)
 {
@@ -1162,7 +1164,7 @@ INT8U IsNetData(INT8U *buf,INT8U len)
 {
 	INT8U i=0,n=0;
 	while(i+2<len){
-		if(buf[i]==FRAME_HEAD&&buf[i+1]+i+2<=len&&buf[buf[i+1]+i+1]==FRAME_END&&(buf[i+3]==DevAddr||buf[i+3]==FRAME_BROAD)){
+		if(buf[i]==FRAME_HEAD&&buf[i+1]+i+2<=len&&buf[buf[i+1]+i+1]==FRAME_END&&(buf[i+3]==DevAddr||buf[i+3]==FRAME_BROAD)&&buf[i+2]!=DevAddr){
 			n++;
 			i+=buf[i+1]+2;
 			Status_Wifi=WIFI_ST_OK;

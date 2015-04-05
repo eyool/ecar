@@ -22,7 +22,7 @@ typedef struct _RFID{
 	IDCMD  p_idcmd;
 }RFID;
 typedef struct _SYSSET{
-	INT8S g_offx,g_offy,g_offz,rev;
+	INT16S g_offx,g_offy,g_offz,rev;
 	INT16S	 hmc_off;
 	INT16U rfid;
 
@@ -127,6 +127,8 @@ typedef struct _SYSSET{
 #define	ADXL_RATE_800		0xd
 #define	ADXL_POWER_ON		0x8
 #define	ADXL_DATA_RD		0x80
+#define	ADXL_FULL      0x8
+#define	ADXL_4G        0x1
 
 #define HMC_CFGA 	0x00  /*Configuration Register A rw*/
 #define HMC_CFGB 	0x01  /*Configuration Register B rw*/

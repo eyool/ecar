@@ -9,6 +9,7 @@
 
 typedef unsigned int   UINT;
 extern OS_EVENT      *App_StartMbox;
+extern SYSSET m_sysset;
 
 
 typedef struct _SENSOR{
@@ -33,8 +34,8 @@ typedef struct _CAR{
 	INT32U allcarpos[CAR_MAX];
 //	INT16S st_angle,st_turn,st_run;
 	RFID *p_rfid[2];/*保存2次卡ID*/ 
-	INT16U spd,rfid;
-	INT8U cid,status,err;
+	INT16U spd;//,rfid;
+	INT8U cid,status,laststatus,err;
 	INT8S RSSI;
 }CAR;
 
@@ -43,7 +44,7 @@ typedef struct _CAR{
 
 #define CAR_CMD_RUN    'r'
 #define CAR_CMD_TURN   't'
-#define CAR_CMD_ANGLE  'a'
+#define CAR_CMD_TILT  'a'
 #define CAR_CMD_PLAY   'p'
 
 #define B_HALL_C 		1
@@ -73,6 +74,9 @@ typedef struct _CAR{
 #define C_PC_ACT_TURN		9
 #define C_PC_ACT_TILT		10
 #define C_PC_SENSOR			11
+#define C_PC_MCMD			12/*手动控制*/
+#define C_PC_MCMD_IN			0x80
+#define C_PC_MCMD_OUT			0x81
 
 #define C_PC_MEM		   0xfe
 #define C_PC_HEART		   0xff
@@ -128,4 +132,6 @@ int   RegisterCar(INT8U id,INT32U pos);
 void UnRegisterCar(INT8U id);
 INT32U GetFrontDis(void);
 void ReportPos(INT32U pos,INT16U rdif);
+void MCmdProc(void);
+INT32S GetUSDis(void);
 #endif
