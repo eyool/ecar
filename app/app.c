@@ -298,7 +298,8 @@ void SensorProc(void)
 		}
 		else if(m_car.status!=CAR_STATUS_INIT&&OSTimeGet()-lastsendtime>TIMEOV_HEART){
 						Systbuf[0]=C_PC_HEART;
-						NetSend(1,NET_CHL_ALL);
+						Systbuf[1]=m_car.status;
+						NetSend(2,NET_CHL_ALL);
 					}
 	//Åö×²¼ì²â
 #define N_CKUS	10
@@ -518,6 +519,8 @@ void NetCmdProc(INT8U *buf,INT8U len)
 						else
 							m_car.status=CAR_STATUS_RUN;
 					}
+					else if(rbuf[1]==C_PC_MCMD_RUN)
+						 m_car.status=CAR_STATUS_RUN;
 					else if(rbuf[1]!=C_PC_MCMD_IN)
 						 memcpy((INT8U *)&m_icmd,rbuf+1,sn-1);
 				}

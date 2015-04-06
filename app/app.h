@@ -77,6 +77,7 @@ typedef struct _CAR{
 #define C_PC_MCMD			12/*ÊÖ¶¯¿ØÖÆ*/
 #define C_PC_MCMD_IN			0x80
 #define C_PC_MCMD_OUT			0x81
+#define C_PC_MCMD_RUN			0x82
 
 #define C_PC_MEM		   0xfe
 #define C_PC_HEART		   0xff
