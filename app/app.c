@@ -195,12 +195,13 @@ void AppRunProc(void  *p_msg)
 				}
 				else{//’“ø®
 					if(m_car.pos<CAR_CHECK_POS){
-						AdjustMotorSpd(MOTOR_RL,1,50);
-						AdjustMotorSpd(MOTOR_RR,1,50);
+						AdjustMotorSpd(MOTOR_RL,1,40);
+						AdjustMotorSpd(MOTOR_RR,1,40);
 					}
 					else{
-						AdjustMotorSpd(MOTOR_RL,-10,20);
-						AdjustMotorSpd(MOTOR_RR,-10,20);							
+						m_car.status=CAR_STATUS_WAITCMD;
+						SetMotorSpd(MOTOR_RL,0);
+						SetMotorSpd(MOTOR_RR,0);							
 					}
 					OSTimeDly(20);
 				}
@@ -517,8 +518,8 @@ void NetCmdProc(INT8U *buf,INT8U len)
 						else
 							m_car.status=CAR_STATUS_RUN;
 					}
-					else
-						memcpy((INT8U *)&m_icmd,rbuf+1,sn-1);
+					else if(rbuf[1]!=C_PC_MCMD_IN)
+						 memcpy((INT8U *)&m_icmd,rbuf+1,sn-1);
 				}
 				
 				break;
@@ -766,7 +767,7 @@ void MCmdProc(void)
 	OSTimeDly(m_icmd.tick&0xff);
 	switch(m_icmd.cmd){
 		case CAR_CMD_RUN:
-			while(spos+(m_icmd.dis&0xff)<m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
+			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
 				AdjustMotorSpd(MOTOR_RL,2,m_icmd.spd);
 				AdjustMotorSpd(MOTOR_RR,2,m_icmd.spd);
 				OSTimeDly(20);
@@ -781,7 +782,7 @@ void MCmdProc(void)
 				TurnLeft();
 				m_icmd.dis=-m_icmd.dis;
 			}
-			while(spos+(m_icmd.dis&0xff)<m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
+			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
 				AdjustMotorSpd(MOTOR_TURN,2,m_icmd.spd);
 				OSTimeDly(20);
 			}
@@ -797,7 +798,7 @@ void MCmdProc(void)
 				OpenDownRelay();
 				m_icmd.dis=-m_icmd.dis;
 			}
-			while(spos+(m_icmd.dis&0xff)<m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
+			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
 				AdjustMotorSpd(MOTOR_TILT,2,m_icmd.spd);
 				OSTimeDly(20);
 			}
@@ -806,13 +807,15 @@ void MCmdProc(void)
 			SetMotorSpd(MOTOR_TILT,0);
 			break;
 	}
+	m_icmd.cmd=0;
+	m_icmd.tick=0;
 }
 INT32S GetUSDis(void)
 {
 	static INT8U b_op=0;
 	static INT32U stime;
 	INT32U n=1000;
-	if(b_op){
+	if(b_op==0){
 		OpenUS();
 		uDelay(30);
 		CloseUS();
@@ -828,8 +831,12 @@ INT32S GetUSDis(void)
 		}	
 	}
 	else{
-		b_op=0;
-		return GetUS()?OSTimeGet()-stime:0;
+		if(OSTimeGet()-stime<30){
+			
+			return GetUS()?OSTimeGet()-stime:0;
+		}
+		else
+			b_op=0;
 	}
 	return -1;
 }

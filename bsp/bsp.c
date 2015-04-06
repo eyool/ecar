@@ -31,7 +31,9 @@ void uDelay(INT32U us)
     {
       __NOP();
       __NOP();  
-      __NOP();      
+      __NOP(); 
+      __NOP(); 
+      __NOP(); 			
     }
      __NOP();  
      __NOP();
@@ -1335,4 +1337,17 @@ void SaveSysSet(void)
 	FLASH_If_Write(SYSSET_ADDR,(INT8U *)&m_sysset,sizeof(m_sysset));
 	FLASH_Lock();	
 
+}
+void TurnLeft(void)
+{
+   	if(!GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_5)){
+				GPIO_SetBits(GPIOB,GPIO_Pin_5);
+				OSTimeDly(200);
+			}
+} 
+void TurnRight(void){
+    if(GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_5)){
+			GPIO_ResetBits(GPIOB,GPIO_Pin_5);
+			OSTimeDly(200);
+		}
 }

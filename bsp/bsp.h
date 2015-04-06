@@ -307,8 +307,6 @@ INT32U CheckCfgSum(void);
 #define CloseRunBreak()   GPIO_ResetBits(GPIOB,GPIO_Pin_2)
 #define OpenTurnBreak()   GPIO_SetBits(GPIOA,GPIO_Pin_5)/*刹车控制*/
 #define CloseTurnBreak()  GPIO_ResetBits(GPIOA,GPIO_Pin_5)
-#define TurnLeft()   			GPIO_SetBits(GPIOB,GPIO_Pin_5) /*方向控制*/
-#define TurnRight()    		GPIO_ResetBits(GPIOB,GPIO_Pin_5)
 #define OpenUS() 					GPIO_SetBits(GPIOC,GPIO_Pin_2)  /*打开超声测距*/
 #define CloseUS() 				GPIO_ResetBits(GPIOC,GPIO_Pin_2) 
 #define GetUS() 					GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_3)/*超声回应脚状态*/
@@ -408,5 +406,9 @@ INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len);
 IDCMD *FindUhfidCmd(RFID *p_rfid);
 
 void SaveSysSet(void);
+/*方向控制*/
+void TurnLeft(void);  
+void TurnRight(void);    
+
 //api end
 #endif
