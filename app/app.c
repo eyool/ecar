@@ -559,27 +559,27 @@ void RunCmdProc(RFID *p_rfid)
 		for (i=0;i<p_rfid->n_idcmd;i++){
 			IDCMD *p_ic = FindUhfidCmd(p_rfid);
 			dt=OSTimeGet()-m_car.l_tick;
-			//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+			if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 			switch(p_ic->cmd){
 					case  CAR_CMD_RUN:
-						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							RunCtrl(p_ic);
-						else{
-							SetMotorSpd(MOTOR_RL,0);
-							SetMotorSpd(MOTOR_RR,0);
-						}
+						//else{
+						//	SetMotorSpd(MOTOR_RL,0);
+						//	SetMotorSpd(MOTOR_RR,0);
+						//}
 						break;
 					case 	CAR_CMD_TURN:
-						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TurnCtrl(p_ic);
-						else
-							SetMotorSpd(MOTOR_TURN,0);
+						//else
+						//	SetMotorSpd(MOTOR_TURN,0);
 						break;
 					case 	CAR_CMD_TILT:
-						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TiltCtrl(p_ic);
-						else
-							SetMotorSpd(MOTOR_TILT,0);
+						//else
+						//	SetMotorSpd(MOTOR_TILT,0);
 						break;
 					case 	CAR_CMD_PLAY:
 
@@ -639,19 +639,21 @@ void RunCtrl(IDCMD *p_ic)
 		
 }
 #define ANGLE_CYCLE   3600
-#define ANGLE_DT      10
-#define ANGLE_MAX     1350
+#define ANGLE_DT      20
+#define ANGLE_MAX     3000
+//#define LMIN_SPD      20
+#define ZERO_SPD      2
 void TurnCtrl(IDCMD *p_ic)
 {
- //   static INT8U IsRun=0;
+  //  static INT32U ltick=0;
     int dir=0;
     int sro=p_ic->dis,cro=TURNANGLEMODIFY(m_car.turnangle_np);//m_sensor[0].rotation[0]-m_sensor[0].rotation[1];
-    if(cro>=(ANGLE_CYCLE>>1)) cro-=ANGLE_CYCLE;
-    if(cro<=-(ANGLE_CYCLE>>1)) cro+=ANGLE_CYCLE;
+    if(cro>=ANGLE_CYCLE) cro-=ANGLE_CYCLE;
+    if(cro<=-ANGLE_CYCLE) cro+=ANGLE_CYCLE;
 
     sro=sro-cro;
-    if(sro>=(ANGLE_CYCLE>>1)) sro-=ANGLE_CYCLE;
-    if(sro<=-(ANGLE_CYCLE>>1)) sro+=ANGLE_CYCLE;
+    //if(sro>=(ANGLE_CYCLE>>1)) sro-=ANGLE_CYCLE;
+    //if(sro<=-(ANGLE_CYCLE>>1)) sro+=ANGLE_CYCLE;
 
     if (sro>=0)
         dir=1;//Õý×ª
@@ -660,23 +662,33 @@ void TurnCtrl(IDCMD *p_ic)
     if (sro>ANGLE_MAX)
         sro=ANGLE_MAX;
 
+
     if (sro<ANGLE_DT) {
-        OpenTurnBreak();
-        SetMotorSpd(MOTOR_TURN,0);
-    }
-    else {
-        CloseTurnBreak();
-        if (dir) 
-            TurnRight();
-        else
-            TurnLeft();
-      
+		OpenTurnBreak();
+		SetMotorSpd(MOTOR_TURN,0);
+		//ltick=OSTimeGet();
+	}
+	else {
+
         /*dspd=((p_ic->spd*sro)/ANGLE_MAX)-m_sensor[0].turnspeed;
         if (dspd>SPD_DT_LMT) 
             dspd=SPD_DT_LMT;
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;*/
-        AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>1);
+		if(!GetTurnBreak())
+			if(sro<(ANGLE_DT<<2)) 
+				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>2);
+			else
+				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>1);
+
+		if(m_sensor[0].turnspeed<ZERO_SPD)
+		{
+			if(dir) 
+				TurnLeft();
+			else
+				TurnRight();
+			CloseTurnBreak();
+		}
     }
 }
 #define TILT_MAX    100
@@ -684,7 +696,7 @@ void TurnCtrl(IDCMD *p_ic)
 void TiltCtrl(IDCMD *p_ic)
 {
     int dir=0;
-    int stilt=p_ic->dis-m_sensor[0].tilt;
+    int stilt=p_ic->dis-(m_sensor[0].tilt+m_sensor[1].tilt>>1);
 
     if (stilt>0) 
         dir=1;

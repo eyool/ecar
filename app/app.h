@@ -113,7 +113,7 @@ typedef struct _CAR{
 //-----------------------
 #define POSMODIFY(a)  ((INT32U)a*259>>9)/*需要实际测试修正*/
 #define SPDMODIFY(a)  ((INT32U)a*2>>5)
-#define TURNANGLEMODIFY(a)  ((INT32U)a*5>>4)
+#define TURNANGLEMODIFY(a)  ((int)a*2>>1)
 
 void App_init(void);
 void MSDelay(UINT ms);//参数：ms

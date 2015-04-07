@@ -307,6 +307,7 @@ INT32U CheckCfgSum(void);
 #define CloseRunBreak()   GPIO_ResetBits(GPIOB,GPIO_Pin_2)
 #define OpenTurnBreak()   GPIO_SetBits(GPIOA,GPIO_Pin_5)/*刹车控制*/
 #define CloseTurnBreak()  GPIO_ResetBits(GPIOA,GPIO_Pin_5)
+#define GetTurnBreak()		GPIO_ReadOutputDataBit(GPIOA,GPIO_Pin_5)
 #define GetTurnDir()		GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_5)
 #define OpenUS() 					GPIO_SetBits(GPIOC,GPIO_Pin_2)  /*打开超声测距*/
 #define CloseUS() 				GPIO_ResetBits(GPIOC,GPIO_Pin_2) 

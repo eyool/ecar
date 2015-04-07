@@ -17,6 +17,7 @@ INT16U ADC_CAL;
 INT32U WifiLinkTime=0,ZigbeeLinkTime=0;
 INT8U Status_Wifi=0,NRst_Wifi=0;
 SYSSET m_sysset;
+INT32U lastcaptick[4]={0,0,0,0};
 //INT16U  ADC_RegularConvertedValueTab[ADC_N_CH];
 //INT16U  ADC_samplebuf[ADC_N_CH];
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
@@ -825,19 +826,20 @@ void Spi2_Istr(void)
 {
 
 }
+#define STOP_TICK_LEN   2000
 void SpdCap_Istr(INT8U chl,INT16U cn)
 {
-	static INT32U lasttick[4]={0,0,0,0};
+//	static INT32U lasttick[4]={0,0,0,0};
 	static INT16U lastcap[4]={0,0,0,0};
 	INT32U tick=OSTimeGet();
 	chl=(chl>>2)&3;
-	if(tick>lasttick[chl]+4000)	//4s 无脉冲认为停止
+	if(tick>lastcaptick[chl]+STOP_TICK_LEN)	//4s 无脉冲认为停止
 		Spd_Motor[chl]=0xffff;
 	else if(cn>=lastcap[chl])
 			Spd_Motor[chl]=cn-lastcap[chl];
 		else
 			Spd_Motor[chl]=0x10000-lastcap[chl]+cn;
-	lasttick[chl]=tick;
+	lastcaptick[chl]=tick;
 	lastcap[chl]=cn;
 	Spd_Motor_cn[chl]++;
 }
@@ -890,10 +892,15 @@ INT16U GetMotorSpd(INT8U chl)
 	static INT16U lastre[4];
 	INT16U re=0,tmp;
 
-	if(chl==3)//速度和捕获通道不一致调整
-		chl=1;
 	if(chl>=4)
 		chl=(chl>>2)&3;
+
+	if(chl==3)//速度和捕获通道不一致调整
+		chl=1;
+
+	if(OSTimeGet()>lastcaptick[chl]+STOP_TICK_LEN)//0速度调整
+		return 0;
+
 	if(Spd_Motor[chl])
 		re=(SPDCAP_FREQ<<3)/Spd_Motor[chl];
 	if(re>10000)
@@ -941,30 +948,30 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 	sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 
 	switch(chl){
-    case 0:	
-        ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+dspd;
-				if(ss>0&&ss<MOTOR_ZERO_OFF)
-					ss=dspd>0?MOTOR_ZERO_OFF:0;
-      TIM_SetCompare1(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
-        break;
-    case 1:	
-        ss=(INT16S)TIM_GetCapture2(SPDPWM_TIM)+dspd;
-				if(ss>0&&ss<MOTOR_ZERO_OFF)
-					ss=dspd>0?MOTOR_ZERO_OFF:0;
-        TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss));
-        break;
-    case 2:	
-        ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
-				if(ss>0&&ss<MOTOR_ZERO_OFF)
-					ss=dspd>0?MOTOR_ZERO_OFF:0;
-        TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss));
-        break;
-    case 3:	
-        ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
-				if(ss>0&&ss<MOTOR_ZERO_OFF)
-					ss=dspd>0?MOTOR_ZERO_OFF:0;
-        TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss));
-        break;
+	case 0:	
+		ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+dspd;
+		if(ss>0&&ss<MOTOR_ZERO_OFF)
+			ss=dspd>0?MOTOR_ZERO_OFF:0;
+		TIM_SetCompare1(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd))); 
+		break;
+	case 1:	
+		ss=(INT16S)TIM_GetCapture2(SPDPWM_TIM)+dspd;
+		if(ss>0&&ss<MOTOR_ZERO_OFF)
+			ss=dspd>0?MOTOR_ZERO_OFF:0;
+		TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd)));
+		break;
+	case 2:	
+		ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
+		if(ss>0&&ss<MOTOR_ZERO_OFF)
+			ss=dspd>0?MOTOR_ZERO_OFF:0;
+		TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd)));
+		break;
+	case 3:	
+		ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
+		if(ss>0&&ss<MOTOR_ZERO_OFF)
+			ss=dspd>0?MOTOR_ZERO_OFF:0;
+		TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd)));
+		break;
 	}
 }
 /*******************************************
