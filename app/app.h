@@ -15,7 +15,7 @@ extern SYSSET m_sysset;
 typedef struct _SENSOR{
 	INT32S		ps;		/*压力值*/
 //	INT32S		pos;/*车体离起点位置 ，cm*/		
-	INT32U 	r_np[2],t_np;/*前进计数,角度计数*/
+	INT32U 	r_np[2],t_np,lastt_np;/*前进计数,角度计数,旋转上次记录计数*/
 	INT16S		tilt;/*倾角-1800-1799*/
 	INT16S		rotation[2];/*转角-1800-1799*/	
 	INT16S		runspeed[2];/*轮子转速，*/
@@ -30,6 +30,7 @@ typedef struct _SENSOR{
 #define CAR_MAX	16
 typedef struct _CAR{
 	INT32U pos,rfid_np,g_tick,l_tick;/*g_tick：每次运行开始实际，l_tick：卡ID更新后从新计时 */
+	INT32S turnangle_np;
 	INT8U allcarid[CAR_MAX];
 	INT32U allcarpos[CAR_MAX];
 //	INT16S st_angle,st_turn,st_run;
@@ -112,6 +113,8 @@ typedef struct _CAR{
 //-----------------------
 #define POSMODIFY(a)  ((INT32U)a*259>>9)/*需要实际测试修正*/
 #define SPDMODIFY(a)  ((INT32U)a*2>>5)
+#define TURNANGLEMODIFY(a)  ((INT32U)a*5>>4)
+
 void App_init(void);
 void MSDelay(UINT ms);//参数：ms
 void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len);

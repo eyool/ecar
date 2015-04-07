@@ -258,7 +258,7 @@ void SensorProc(void)
 	hbuf[4]=((int)hbuf[4]*7>>3)+buf[6];
 	hbuf[5]=((int)hbuf[5]*7>>3)+buf[8];		
 	p_sensor->rotation[1]=GetArc(hbuf[4],hbuf[5]);	
-	//------------
+	//------------更新偏移量
 	m_sysset.g_offx=hbuf[0]>>3;
 	m_sysset.g_offy=hbuf[1]>>3;
 	m_sysset.hmc_off=p_sensor->rotation[0]-p_sensor->rotation[1];
@@ -267,14 +267,9 @@ void SensorProc(void)
 	if(m_sysset.hmc_off<=-1800)
 		m_sysset.hmc_off+=3600;	
 	m_sysset.rfid=m_car.p_rfid[0]->id;
-	//-
-  if(GetPSData(PS_CHL_A,(INT32S *)buf))
-		p_sensor->ps=*(INT32S *)buf;
-	//---检查是否回正
-	if(CheckCenter())
-		p_sensor->b_hall|=B_HALL_C;
-	else
-		p_sensor->b_hall&=(~B_HALL_C);	
+	//-压力传感器值
+	  if(GetPSData(PS_CHL_A,(INT32S *)buf))
+			p_sensor->ps=*(INT32S *)buf;
 	//得到外部电压
 		p_sensor->xv=GetXV();
 	//得到电机数度和脉冲数
@@ -284,6 +279,23 @@ void SensorProc(void)
 		p_sensor->t_np=GetMotorPoscn(MOTOR_TURN);
 		p_sensor->r_np[0]=GetMotorPoscn(MOTOR_RL);	
 		p_sensor->r_np[1]=GetMotorPoscn(MOTOR_RR);
+	//---检查是否回正
+		if(CheckCenter()){
+			p_sensor->b_hall|=B_HALL_C;
+			p_sensor->lastt_np=p_sensor->t_np;
+			m_car.turnangle_np=0;
+		}
+		else
+			p_sensor->b_hall&=(~B_HALL_C);	
+	//计算角度对应np
+		tmp=p_sensor->t_np-p_sensor->lastt_np;
+		p_sensor->lastt_np=p_sensor->t_np;
+		if(GetTurnDir())
+			m_car.turnangle_np+=tmp;
+		else
+			m_car.turnangle_np-=tmp;
+
+
 	//这里添加测距函数
 		tmp=(m_sensor[0].runspeed[0]>>2)+(m_sensor[0].runspeed[1]>>2);
 		tmp+=(m_sensor[1].runspeed[0]>>2)+(m_sensor[1].runspeed[1]>>2);
@@ -547,19 +559,27 @@ void RunCmdProc(RFID *p_rfid)
 		for (i=0;i<p_rfid->n_idcmd;i++){
 			IDCMD *p_ic = FindUhfidCmd(p_rfid);
 			dt=OSTimeGet()-m_car.l_tick;
-			if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+			//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 			switch(p_ic->cmd){
 					case  CAR_CMD_RUN:
-						//if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							RunCtrl(p_ic);
+						else{
+							SetMotorSpd(MOTOR_RL,0);
+							SetMotorSpd(MOTOR_RR,0);
+						}
 						break;
 					case 	CAR_CMD_TURN:
-						//if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TurnCtrl(p_ic);
+						else
+							SetMotorSpd(MOTOR_TURN,0);
 						break;
 					case 	CAR_CMD_TILT:
-						//if(m_car.l_tick>p_ic->tick*100&&(m_car.l_tick<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TiltCtrl(p_ic);
+						else
+							SetMotorSpd(MOTOR_TILT,0);
 						break;
 					case 	CAR_CMD_PLAY:
 
@@ -625,7 +645,7 @@ void TurnCtrl(IDCMD *p_ic)
 {
  //   static INT8U IsRun=0;
     int dir=0;
-    int sro=p_ic->dis,cro=m_sensor[0].rotation[0]-m_sensor[0].rotation[1];
+    int sro=p_ic->dis,cro=TURNANGLEMODIFY(m_car.turnangle_np);//m_sensor[0].rotation[0]-m_sensor[0].rotation[1];
     if(cro>=(ANGLE_CYCLE>>1)) cro-=ANGLE_CYCLE;
     if(cro<=-(ANGLE_CYCLE>>1)) cro+=ANGLE_CYCLE;
 
