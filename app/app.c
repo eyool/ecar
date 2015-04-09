@@ -200,6 +200,7 @@ void AppRunProc(void  *p_msg)
 					if(m_car.pos<CAR_CHECK_POS){
 						AdjustMotorSpd(MOTOR_RL,1,40);
 						AdjustMotorSpd(MOTOR_RR,1,40);
+						AdjustMotorBalance(m_sensor[0].ps);
 					}
 					else{
 						m_car.status=CAR_STATUS_WAITCMD;
@@ -643,7 +644,7 @@ void RunCtrl(IDCMD *p_ic)
 		
     AdjustMotorSpd(MOTOR_RL,1,p_ic->spd);
     AdjustMotorSpd(MOTOR_RR,1,p_ic->spd);
-    
+    AdjustMotorBalance(m_sensor[0].ps);
 		
 }
 #define ANGLE_CYCLE   3600
@@ -817,6 +818,7 @@ void MCmdProc(void)
 			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
 				AdjustMotorSpd(MOTOR_RL,1,m_icmd.spd);
 				AdjustMotorSpd(MOTOR_RR,1,m_icmd.spd);
+				AdjustMotorBalance(m_sensor[0].ps);
 				OSTimeDly(20);
 			}
 			SetMotorSpd(MOTOR_RL,0);

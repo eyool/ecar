@@ -937,6 +937,29 @@ void SetMotorSpd(INT8U chl,INT16U spd)
 		case 3:	TIM_SetCompare4(SPDPWM_TIM,(spd*(SPDPWM_CLK/SPDPWM_FREQ))/100);break;
 	}
 }
+#define MAX_BALANCE_OFF		5
+void AdjustMotorBalance(INT32S dps)
+{
+	INT16S r,l;
+	l=TIM_GetCapture3(SPDPWM_TIM);
+	r=TIM_GetCapture4(SPDPWM_TIM);
+	if(l<MOTOR_ZERO_OFF||r<MOTOR_ZERO_OFF)
+		return;
+	dps>>=15;
+	if(dps>MAX_BALANCE_OFF)
+		dps=MAX_BALANCE_OFF;
+	else if(dps<-MAX_BALANCE_OFF)
+		dps=-MAX_BALANCE_OFF;
+	l+=dps;
+	r-=dps;
+	if(l<MOTOR_ZERO_OFF)
+		l=MOTOR_ZERO_OFF;
+	if(r<MOTOR_ZERO_OFF)
+		r=MOTOR_ZERO_OFF;
+	TIM_SetCompare3(SPDPWM_TIM,l);
+	TIM_SetCompare4(SPDPWM_TIM,r);
+}
+
 void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 {
   int ss;

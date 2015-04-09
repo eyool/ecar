@@ -113,8 +113,8 @@ typedef struct _CAR{
 
 #define CAR_CHECK_POS			30
 //-----------------------
-#define POSMODIFY(a)  ((INT32U)a*259>>9)/*需要实际测试修正*/
-#define SPDMODIFY(a)  ((INT32U)a*2>>5)
+#define POSMODIFY(a)  ((INT32U)a*259>>8)/*需要实际测试修正*/
+#define SPDMODIFY(a)  ((INT32U)a*2>>6)
 #define TURNANGLEMODIFY(a)  ((int)a*2>>1)
 
 void App_init(void);

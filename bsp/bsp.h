@@ -411,6 +411,9 @@ void SaveSysSet(void);
 /*方向控制*/
 void TurnLeft(void);  
 void TurnRight(void);    
+//告知数据准备好了
 void UARTMboxPost(INT8U n,INT8U chl);
+//调整左右轮转速平衡
+void AdjustMotorBalance(INT32S dps);
 //api end
 #endif
