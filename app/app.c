@@ -5,8 +5,10 @@
 
 INT8U LvSystbuf[SYS_TBUF_LEN+8];//系统临时缓存
 INT8U Sysrbuf[SYS_RBUF_LEN];
+INT8U Uarttbuf[SYS_TBUF_LEN];
+//INT8U n_uartTX;
 INT8U *Systbuf;
-INT32U G_msg[5];
+INT32U G_msg[2];
 //INT32U SysStatus,
 INT8U b_debug=0,sw_power=0;
 SENSOR m_sensor[2];//0,当前，1，保留上次
@@ -37,6 +39,7 @@ void App_init(void)
 	memset((void *)&m_icmd,0,sizeof(IDCMD));
 	m_car.cid=GetAddr();
 	m_car.status=CAR_STATUS_NULL;
+	//n_uartTX=0;
 //	p_rfid=NULL;
 	OSTimeDly(2);
 	WifiEnable();
@@ -170,9 +173,9 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 //任务函数 3/4
 void AppRunProc(void  *p_msg)
 {
- 	INT32U tmp;
+// 	INT32U tmp;
 	if(!p_msg){
-		OSTimeDly(20);
+		OSTimeDly(50);
 		switch(m_car.status){
 			case CAR_STATUS_NULL:
 
@@ -181,9 +184,9 @@ void AppRunProc(void  *p_msg)
 				if(!m_car.err){
 					Systbuf[0]=C_PC_CFG_JOIN;
 					Systbuf[1]=GetKey()&KEY_JOIN;
-					NetSend(2,NET_CHL_ALL);
+					NetSend(2,NET_CHL_ALL);//INIT
 					OSTimeDly(1000);
-				}
+				}/**/
 				break;
 			case CAR_STATUS_JOIN:
 				sw_power=1;
@@ -211,7 +214,7 @@ void AppRunProc(void  *p_msg)
 				break;
 			case CAR_STATUS_RUN:
 				if(m_car.p_rfid[0]){
-					if((m_car.p_rfid[0]->area==CAR_AREA_GETOFF&&!(GetKey()&KEY_PLAY))||(m_car.p_rfid[0]->area==CAR_AREA_GETON&&(GetKey()&KEY_PLAY))){
+					if((m_car.p_rfid[0]->area==CAR_AREA_GETOFF&&!(GetKey()&KEY_GO))||(m_car.p_rfid[0]->area==CAR_AREA_GETON&&(GetKey()&KEY_GO))){
 						SetMotorSpd(MOTOR_TURN,0);
 						SetMotorSpd(MOTOR_RL,0);
 						SetMotorSpd(MOTOR_RR,0);
@@ -304,14 +307,15 @@ void SensorProc(void)
 		m_car.pos=POSMODIFY(tmp);
 		if(m_car.p_rfid[0])
 			m_car.pos+=m_car.p_rfid[0]->pos;
-		if(m_car.status==CAR_STATUS_RUN){
-			if(m_car.p_rfid[0])			
-				ReportPos(m_car.pos,m_car.p_rfid[0]->id);	
-		}
+		//if(m_car.status==CAR_STATUS_RUN){
+		if(m_car.p_rfid[0])			
+			ReportPos();	
+		//}
 		else if(m_car.status!=CAR_STATUS_INIT&&OSTimeGet()-lastsendtime>TIMEOV_HEART){
-						Systbuf[0]=C_PC_HEART;
-						Systbuf[1]=m_car.status;
-						NetSend(2,NET_CHL_ALL);
+						Uarttbuf[0]=C_PC_HEART;
+						Uarttbuf[1]=m_car.status;
+						UARTMboxPost(2,NET_CHL_ALL);
+						//NetSend(2,NET_CHL_ALL);//heart
 					}
 	//碰撞检测
 #define N_CKUS	10
@@ -387,7 +391,7 @@ INT8U DowloadCFG(void)
 	INT8U err;
 	if(WifiStatus()==WIFI_ST_OK){
 		Systbuf[0]=C_PC_CFG_MD5;
-		NetSend(1,NET_CHL_WIFI);
+		NetSend(1,NET_CHL_WIFI);//DL
 		msg = OSMboxPend(App_StartMbox, 3000, &err);//等待3秒
 		if(err==OS_ERR_NONE&&(msg[0]&0xff)==C_PC_CFG_DL){
 			if(msg[1]==C_PC_CFG_DL_OK)
@@ -422,7 +426,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					Systbuf[0]=C_PC_CFG_DL;
 					Systbuf[1]=0;	
 					Systbuf[2]=0;						
-					NetSend(3,NET_CHL_WIFI);	
+					NetSend(3,NET_CHL_WIFI);//DL	
 				}
 				else{
 					G_msg[0]=C_PC_CFG_DL;
@@ -449,7 +453,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 							}								
 						}else
 								*(INT16U *)(Systbuf+1)=C_PC_CFG_DL_ERR;									
-						NetSend(3,NET_CHL_WIFI);	
+						NetSend(3,NET_CHL_WIFI);//DL	
 						if(b_dl==0){
 								G_msg[0]=C_PC_CFG_DL;
 								G_msg[1]=C_PC_CFG_DL_ERR;	
@@ -510,12 +514,12 @@ void NetCmdProc(INT8U *buf,INT8U len)
 			case C_PC_SENSOR:
 				Systbuf[0]=C_PC_SENSOR;
 				memcpy(Systbuf+1,(INT8U *)&m_sensor[0],sizeof(m_sensor)>>1);
-				NetSend((sizeof(m_sensor)>>1)+1,NET_CHL_ALL);
+				NetSend((sizeof(m_sensor)>>1)+1,NET_CHL_ALL);//sensor
 				break;
 			case C_PC_MEM:
 				Systbuf[0]=C_PC_MEM;
 				memcpy(Systbuf+1,(INT8U *)(0x20000000+(*(INT32U *)(rbuf+2)&0x3fff)),rbuf[1]&0x1f);
-				NetSend((rbuf[1]&0x1f)+1,NET_CHL_ALL);
+				NetSend((rbuf[1]&0x1f)+1,NET_CHL_ALL);//mem
 				break;
 			case C_PC_MCMD:
 				if(m_car.status!=CAR_STATUS_WAITCMD){
@@ -537,6 +541,10 @@ void NetCmdProc(INT8U *buf,INT8U len)
 						 memcpy((INT8U *)&m_icmd,rbuf+1,sn-1);
 				}
 				
+				break;
+			case C_PC_SYSRST:
+				if(*(INT32U *)(rbuf+2)==PROGRAMM_KEY&&rbuf[1]==GetAddr())
+					NVIC_SystemReset();
 				break;
 
 		}
@@ -633,8 +641,8 @@ void RunCtrl(IDCMD *p_ic)
 		else if(dspd<0)
 			sspd--;*/
 		
-    AdjustMotorSpd(MOTOR_RL,2,p_ic->spd);
-    AdjustMotorSpd(MOTOR_RR,2,p_ic->spd);
+    AdjustMotorSpd(MOTOR_RL,1,p_ic->spd);
+    AdjustMotorSpd(MOTOR_RR,1,p_ic->spd);
     
 		
 }
@@ -677,9 +685,9 @@ void TurnCtrl(IDCMD *p_ic)
             dspd=-SPD_DT_LMT;*/
 		if(!GetTurnBreak())
 			if(sro<(ANGLE_DT<<2)) 
-				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>2);
-			else
 				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>1);
+			else
+				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd);
 
 		if(m_sensor[0].turnspeed<ZERO_SPD)
 		{
@@ -722,7 +730,7 @@ void TiltCtrl(IDCMD *p_ic)
             dspd=SPD_DT_LMT;
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;*/
-        AdjustMotorSpd(MOTOR_TILT,2,p_ic->spd);
+        AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd);
 
     }
 }
@@ -772,26 +780,30 @@ INT32U GetFrontDis(void)
 	return dis;
 }
 
-#define RP_DT	500
+#define RP_DT	1000
 #define RP_DP	50
-void ReportPos(INT32U pos,INT16U rdif)
+void ReportPos(void)//INT32U pos,INT16U rdif
 {
 	static INT32U ltick=0;
 	static INT32U lpos=0;
 	INT32U ntick=OSTimeGet();
-	if(ntick-ltick>RP_DT||pos-lpos>RP_DP){
+	if(ntick-ltick>RP_DT||m_car.pos-lpos>RP_DP){
 		if(GetKey()&KEY_JOIN)
-			Systbuf[0]=C_CAR_REGPOS;
+			Uarttbuf[0]=C_CAR_REGPOS;
 		else
-			Systbuf[0]=C_CAR_UNREG;
+			Uarttbuf[0]=C_CAR_UNREG;
 		//Systbuf[1]=m_car.cid;
-		*(INT32U *)(Systbuf+1)=pos;
-		*(INT16U *)(Systbuf+5)=rdif;
+		*(INT32U *)(Uarttbuf+1)=m_car.pos;
+		*(INT16U *)(Uarttbuf+5)=m_car.p_rfid[0]->id;
+		*(INT16U *)(Uarttbuf+7)=m_car.spd;
+		Uarttbuf[9]=m_car.status;
+		Uarttbuf[10]=GetKey();
 //		if(ntick-ltick>RP_DT)
 		ltick=ntick;
 //		if(pos-lpos>RP_DP)
-		lpos=pos;
-		NetSend(7,NET_CHL_ALL);
+		lpos=m_car.pos;
+		//NetSend(10,NET_CHL_ALL);//rep
+		UARTMboxPost(11,NET_CHL_ALL);
 	}
 }
 
@@ -803,8 +815,8 @@ void MCmdProc(void)
 	switch(m_icmd.cmd){
 		case CAR_CMD_RUN:
 			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
-				AdjustMotorSpd(MOTOR_RL,2,m_icmd.spd);
-				AdjustMotorSpd(MOTOR_RR,2,m_icmd.spd);
+				AdjustMotorSpd(MOTOR_RL,1,m_icmd.spd);
+				AdjustMotorSpd(MOTOR_RR,1,m_icmd.spd);
 				OSTimeDly(20);
 			}
 			SetMotorSpd(MOTOR_RL,0);
@@ -818,7 +830,7 @@ void MCmdProc(void)
 				m_icmd.dis=-m_icmd.dis;
 			}
 			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
-				AdjustMotorSpd(MOTOR_TURN,2,m_icmd.spd);
+				AdjustMotorSpd(MOTOR_TURN,1,m_icmd.spd);
 				OSTimeDly(20);
 			}
 			SetMotorSpd(MOTOR_TURN,0);
@@ -834,7 +846,7 @@ void MCmdProc(void)
 				m_icmd.dis=-m_icmd.dis;
 			}
 			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
-				AdjustMotorSpd(MOTOR_TILT,2,m_icmd.spd);
+				AdjustMotorSpd(MOTOR_TILT,1,m_icmd.spd);
 				OSTimeDly(20);
 			}
 			CloseUpRelay();
@@ -875,3 +887,9 @@ INT32S GetUSDis(void)
 	}
 	return -1;
 }
+void UartSendProc(INT8U n,INT8U chl)
+{
+	memcpy(Systbuf,Uarttbuf,n);
+	NetSend(n,chl);
+}
+

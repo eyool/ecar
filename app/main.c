@@ -212,7 +212,11 @@ static  void  App_TaskUart (void *p_arg)
         msg = (INT32U *)(OSMboxPend(App_UARTMbox, 0, &err));
 		if(err==OS_ERR_NONE){
 			if((INT32U)msg>0){
-				UartRecvProc(msg[0]>>8,(INT8U *)msg[1],msg[0]&0xff);
+				if(msg[0]>>16)
+					UartSendProc(msg[0]&0xff,(msg[0]>>8)&0xff);
+				else
+					UartRecvProc((msg[0]>>8)&0xff,(INT8U *)msg[1],msg[0]&0xff);
+
 			}
 		}
     }

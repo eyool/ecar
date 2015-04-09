@@ -80,8 +80,10 @@ typedef struct _CAR{
 #define C_PC_MCMD_OUT			0x81
 #define C_PC_MCMD_RUN			0x82
 
+#define C_PC_SYSRST        0xfd
 #define C_PC_MEM		   0xfe
 #define C_PC_HEART		   0xff
+
 #define TIMEOV_HEART	   2000
 
 #define C_PC_CFG_DL_ERR		0xffff 
@@ -135,7 +137,9 @@ void SW_Power(void);
 int   RegisterCar(INT8U id,INT32U pos);
 void UnRegisterCar(INT8U id);
 INT32U GetFrontDis(void);
-void ReportPos(INT32U pos,INT16U rdif);
+void ReportPos(void);
 void MCmdProc(void);
 INT32S GetUSDis(void);
+void UartSendProc(INT8U n,INT8U chl);
+
 #endif

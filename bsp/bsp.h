@@ -272,9 +272,9 @@ void PS_init(void);
 #define FRAME_BROAD 0xff
 
 
-#define KEY_PLAY	1
+#define KEY_GO		1
 #define KEY_JOIN		2
-#define KEY_REV		4
+#define KEY_REV			4
 /*******************************************
 *Wifi 设置远程服务器 默认192.168.100.3
 *******************************************/
@@ -411,6 +411,6 @@ void SaveSysSet(void);
 /*方向控制*/
 void TurnLeft(void);  
 void TurnRight(void);    
-
+void UARTMboxPost(INT8U n,INT8U chl);
 //api end
 #endif

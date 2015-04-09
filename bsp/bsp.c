@@ -18,6 +18,7 @@ INT32U WifiLinkTime=0,ZigbeeLinkTime=0;
 INT8U Status_Wifi=0,NRst_Wifi=0;
 SYSSET m_sysset;
 INT32U lastcaptick[4]={0,0,0,0};
+INT32U uarttmsg[2];
 //INT16U  ADC_RegularConvertedValueTab[ADC_N_CH];
 //INT16U  ADC_samplebuf[ADC_N_CH];
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
@@ -945,32 +946,36 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		sspd=100;
 	if(sspd<0)
 		sspd=0;	
+	sspd>>=1;
 	sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 
 	switch(chl){
-	case 0:	
+	case MOTOR_TURN:	
 		ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
-		TIM_SetCompare1(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd))); 
+
+		TIM_SetCompare1(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
-	case 1:	
+	case MOTOR_TILT:	
 		ss=(INT16S)TIM_GetCapture2(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
-		TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd)));
+		TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
-	case 2:	
+	case MOTOR_RL:	
 		ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
-		TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd)));
+
+		TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
-	case 3:	
+	case MOTOR_RR:	
 		ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
-		TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(dspd>=0?(ss>sspd?sspd:ss):(ss>sspd?ss:sspd)));
+
+		TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
 	}
 }
@@ -1357,4 +1362,9 @@ void TurnRight(void){
 			GPIO_ResetBits(GPIOB,GPIO_Pin_5);
 			OSTimeDly(200);
 		}
+}
+void UARTMboxPost(INT8U n,INT8U chl)
+{
+	uarttmsg[0]=(1<<16)|(chl<<8)|n;
+	OSMboxPost(App_UARTMbox, (void *)uarttmsg);
 }
