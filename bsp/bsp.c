@@ -990,8 +990,11 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
-
 		TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
+		if(ss<=0)
+			OpenRunBreak();
+		else
+			CloseRunBreak();
 		break;
 	case MOTOR_RR:	
 		ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
@@ -999,6 +1002,10 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
 
 		TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
+		if(ss<=0)
+			OpenRunBreak();
+		else
+			CloseRunBreak();
 		break;
 	}
 }
