@@ -19,6 +19,7 @@ INT8U Status_Wifi=0,NRst_Wifi=0;
 SYSSET m_sysset;
 INT32U lastcaptick[4]={0,0,0,0};
 INT32U uarttmsg[2];
+INT16U safedis=0;
 //INT16U  ADC_RegularConvertedValueTab[ADC_N_CH];
 //INT16U  ADC_samplebuf[ADC_N_CH];
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
@@ -177,14 +178,29 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;	
   GPIO_Init(GPIOC, &GPIO_InitStructure); 
 	CloseUS();
+	/* Enable AFIO clock */
+  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+  /* Connect EXTI3 Line to PC.03 pin */
+  GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource3);
+
+  /* Configure EXTI0 line */
+  EXTI_InitStructure.EXTI_Line = EXTI_Line3;
+  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;  
+  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+  EXTI_Init(&EXTI_InitStructure);
+
+  /* Enable and set EXTI4 Interrupt to the lowest priority */
+  NVIC_InitStructure.NVIC_IRQChannel = EXTI3_IRQn;
+  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x03;
+  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x04;
+  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+  NVIC_Init(&NVIC_InitStructure);
 	//»ô¶û´«¸ÐÆ÷
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;		
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4; 
   GPIO_Init(GPIOA, &GPIO_InitStructure); 		
 	
-	/* Enable AFIO clock */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-
   /* Connect EXTI4 Line to PA.04 pin */
   GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource4);
 
@@ -938,12 +954,13 @@ void SetMotorSpd(INT8U chl,INT16U spd)
 	}
 }
 #define MAX_BALANCE_OFF		5
+#define MAX_BALANCE_START	(MOTOR_ZERO_OFF+25)
 void AdjustMotorBalance(INT32S dps)
 {
 	INT16S r,l;
 	l=TIM_GetCapture3(SPDPWM_TIM);
 	r=TIM_GetCapture4(SPDPWM_TIM);
-	if(l<MOTOR_ZERO_OFF||r<MOTOR_ZERO_OFF)
+	if(l<MAX_BALANCE_START||r<MAX_BALANCE_START)
 		return;
 	dps>>=15;
 	if(dps>MAX_BALANCE_OFF)
@@ -991,7 +1008,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
 		TIM_SetCompare3(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
-		if(ss<=0)
+		if(ss<=0&&TIM_GetCapture4(SPDPWM_TIM)==0)
 			OpenRunBreak();
 		else
 			CloseRunBreak();
@@ -1002,7 +1019,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
 
 		TIM_SetCompare4(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
-		if(ss<=0)
+		if(ss<=0&&TIM_GetCapture3(SPDPWM_TIM)==0)
 			OpenRunBreak();
 		else
 			CloseRunBreak();
@@ -1398,3 +1415,25 @@ void UARTMboxPost(INT8U n,INT8U chl)
 	uarttmsg[0]=(1<<16)|(chl<<8)|n;
 	OSMboxPost(App_UARTMbox, (void *)uarttmsg);
 }
+#define DIS_MIN	2
+#define DIS_MAX	400
+void CalcUS(void)
+{
+	static INT16U ltick=0;
+	INT16U tp,ntick=TIM_GetCounter(TIM4);
+	if(GetUS())
+		ltick=ntick;
+	else{
+		if(ntick>=ltick)
+			tp=(ntick-ltick)*17>>3;
+		else
+			tp=(0x10000-ltick+ntick)*17>>3;	
+		if(tp>DIS_MIN)
+			safedis=tp>DIS_MAX?DIS_MAX:tp;
+	}
+}
+INT16U GetFrontSafeDis(void)
+{
+	return safedis;
+}
+

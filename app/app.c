@@ -243,7 +243,7 @@ void AppRunProc(void  *p_msg)
 void SensorProc(void)
 {
 	static INT16S hbuf[6]={0,0,0,0,0,0};
-	static INT8U  bn=0;
+//	static INT8U  bn=0;
 	INT16S buf[9]; 
 	SENSOR *p_sensor=&m_sensor[0];
 	SYSSET *p_ss=(SYSSET *)SYSSET_ADDR;
@@ -319,7 +319,17 @@ void SensorProc(void)
 						//NetSend(2,NET_CHL_ALL);//heart
 					}
 	//Åö×²¼ì²â
-#define N_CKUS	10
+#define SAFE_DIS	300
+		m_car.frontsafedis=m_car.frontsafedis*7+GetFrontSafeDis()>>3;
+		TrigUS();
+		if(m_car.frontsafedis<SAFE_DIS){
+			AdjustMotorSpd(MOTOR_RL,0,m_car.frontsafedis>>3);
+			AdjustMotorSpd(MOTOR_RR,0,m_car.frontsafedis>>3);
+		//	OpenRunBreak();
+		}
+		//else
+			//CloseRunBreak();
+/*#define N_CKUS	10
 		tmp=GetUSDis();
 		if(tmp==0){
 			if(bn++>N_CKUS)
@@ -329,7 +339,7 @@ void SensorProc(void)
 				bn=0;
 				CloseRunBreak();
 		}
-	//Wifi_send((INT8U *)buf,18);
+	//Wifi_send((INT8U *)buf,18);*/
 	OSTimeDly(5);
 }
 //-------------------------
@@ -859,9 +869,14 @@ void MCmdProc(void)
 	m_icmd.cmd=0;
 	m_icmd.tick=0;
 }
-INT32S GetUSDis(void)
+void TrigUS(void)
 {
-	static INT8U b_op=0;
+	if(GetUS())
+		return;
+	OpenUS();
+	uDelay(30);
+	CloseUS();
+/*	static INT8U b_op=0;
 	static INT32U stime;
 	INT32U n=1000;
 	if(b_op==0){
@@ -887,7 +902,7 @@ INT32S GetUSDis(void)
 		else
 			b_op=0;
 	}
-	return -1;
+	return -1;*/
 }
 void UartSendProc(INT8U n,INT8U chl)
 {

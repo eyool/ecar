@@ -299,6 +299,21 @@ void TIM4_IRQHandler(void)	 //统计3个电机速度
 
 	OSIntExit();
 }
+void EXTI3_IRQHandler(void)
+{
+    OS_CPU_SR  cpu_sr;
+    OS_ENTER_CRITICAL();                         /* Tell uC/OS-II that we are starting an ISR          */
+    OSIntNesting++;
+    OS_EXIT_CRITICAL();
+
+		if(EXTI_GetFlagStatus(EXTI_Line3)==SET)
+		{
+			EXTI_ClearITPendingBit(EXTI_Line3);
+			CalcUS();
+		}
+
+	OSIntExit();
+}	
 void EXTI4_IRQHandler(void)
 {
     OS_CPU_SR  cpu_sr;
@@ -313,4 +328,4 @@ void EXTI4_IRQHandler(void)
 		}
 
 	OSIntExit();
-}	
+}

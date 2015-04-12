@@ -415,5 +415,9 @@ void TurnRight(void);
 void UARTMboxPost(INT8U n,INT8U chl);
 //调整左右轮转速平衡
 void AdjustMotorBalance(INT32S dps);
+//计算距离
+void CalcUS(void);
+//得到距离
+INT16U GetFrontSafeDis(void);
 //api end
 #endif

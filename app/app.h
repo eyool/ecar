@@ -35,7 +35,7 @@ typedef struct _CAR{
 	INT32U allcarpos[CAR_MAX];
 //	INT16S st_angle,st_turn,st_run;
 	RFID *p_rfid[2];/*±£´æ2´Î¿¨ID*/ 
-	INT16U spd;//,rfid;
+	INT16U spd,frontsafedis;//,rfid;
 	INT8U cid,status,laststatus,err;
 	INT8S RSSI;
 }CAR;
@@ -139,7 +139,7 @@ void UnRegisterCar(INT8U id);
 INT32U GetFrontDis(void);
 void ReportPos(void);
 void MCmdProc(void);
-INT32S GetUSDis(void);
+void TrigUS(void);
 void UartSendProc(INT8U n,INT8U chl);
 
 #endif
