@@ -537,6 +537,8 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					if(rbuf[1]==C_PC_MCMD_IN){
 						m_car.laststatus=m_car.status;
 						m_car.status=CAR_STATUS_WAITCMD;
+						if(sn>=3)
+							m_car.p_rfid[0]=(RFID *)(CFGSYS_FLASH_CFG_BODY+*(INT16U *)(CFGSYS_FLASH_CFG_NP+(rbuf[2]<<2)));
 					}
 				}
 				else{
@@ -667,8 +669,8 @@ void TurnCtrl(IDCMD *p_ic)
   //  static INT32U ltick=0;
     int dir=0;
     int sro=p_ic->dis,cro=TURNANGLEMODIFY(m_car.turnangle_np);//m_sensor[0].rotation[0]-m_sensor[0].rotation[1];
-    if(cro>=ANGLE_CYCLE) cro-=ANGLE_CYCLE;
-    if(cro<=-ANGLE_CYCLE) cro+=ANGLE_CYCLE;
+    while(cro>=ANGLE_CYCLE) cro-=ANGLE_CYCLE;
+    while(cro<=-ANGLE_CYCLE) cro+=ANGLE_CYCLE;
 
     sro=sro-cro;
     //if(sro>=(ANGLE_CYCLE>>1)) sro-=ANGLE_CYCLE;

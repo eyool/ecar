@@ -19,7 +19,7 @@ INT8U Status_Wifi=0,NRst_Wifi=0;
 SYSSET m_sysset;
 INT32U lastcaptick[4]={0,0,0,0};
 INT32U uarttmsg[2];
-INT16U safedis=0;
+INT16U safedis=10000;
 //INT16U  ADC_RegularConvertedValueTab[ADC_N_CH];
 //INT16U  ADC_samplebuf[ADC_N_CH];
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
@@ -953,7 +953,7 @@ void SetMotorSpd(INT8U chl,INT16U spd)
 		case 3:	TIM_SetCompare4(SPDPWM_TIM,(spd*(SPDPWM_CLK/SPDPWM_FREQ))/100);break;
 	}
 }
-#define MAX_BALANCE_OFF		5
+#define MAX_BALANCE_OFF		10
 #define MAX_BALANCE_START	(MOTOR_ZERO_OFF+25)
 void AdjustMotorBalance(INT32S dps)
 {
