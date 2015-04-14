@@ -63,12 +63,12 @@ typedef struct _CAR{
 #define NET_CHL_ALL				3	
 
 //
-#define C_PC_POS				1 
+#define C_PC_POS			1 
 #define C_PC_CFG_MD5		2 
 //#define C_PC_CFG_MD5_OK		1 
 #define C_PC_CFG_DL			3 
 #define C_PC_CFG_JOIN		4 
-#define C_CAR_REGPOS			5 
+#define C_CAR_REGPOS		5 
 #define C_CAR_UNREG			6 
 #define C_PC_G_ADJUST		7
 #define C_PC_ACT_RUN		8
@@ -80,6 +80,7 @@ typedef struct _CAR{
 #define C_PC_MCMD_OUT			0x81
 #define C_PC_MCMD_RUN			0x82
 
+#define C_PC_SYSERR        0xfc
 #define C_PC_SYSRST        0xfd
 #define C_PC_MEM		   0xfe
 #define C_PC_HEART		   0xff
@@ -115,7 +116,7 @@ typedef struct _CAR{
 //-----------------------
 #define POSMODIFY(a)  ((INT32U)a*259>>8)/*需要实际测试修正*/
 #define SPDMODIFY(a)  ((INT32U)a*2>>6)
-#define TURNANGLEMODIFY(a)  ((int)a*5>>1)
+#define TURNANGLEMODIFY(a)  ((int)a<<2)
 
 void App_init(void);
 void MSDelay(UINT ms);//参数：ms

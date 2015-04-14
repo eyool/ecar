@@ -56,14 +56,14 @@ void App_init(void)
 	
 //#define TEST 1	
 #ifndef	TEST	
-	if(CheckSelf()){	
+	if(CheckSelf()==0){	
 		while(!DowloadCFG()){
 			WifiLink();
 			OSTimeDly(200);			
 		}				
 	}
-	else
-		m_car.err=SYS_STATUS_INIT_ERR;			
+	//else
+		//m_car.err=SYS_STATUS_INIT_ERR;			
 #endif	
 //	test();
 	m_car.status=CAR_STATUS_INIT;
@@ -186,7 +186,14 @@ void AppRunProc(void  *p_msg)
 					Systbuf[1]=GetKey()&KEY_JOIN;
 					NetSend(2,NET_CHL_ALL);//INIT
 					OSTimeDly(1000);
-				}/**/
+				}
+				else{
+					Systbuf[0]=C_PC_SYSERR;
+					Systbuf[1]=m_car.status;
+					Systbuf[2]=m_car.err;
+					NetSend(3,NET_CHL_ALL);//INIT
+					OSTimeDly(1000);
+				}
 				break;
 			case CAR_STATUS_JOIN:
 				sw_power=1;
@@ -198,8 +205,8 @@ void AppRunProc(void  *p_msg)
 				}
 				else{//’“ø®
 					if(m_car.pos<CAR_CHECK_POS){
-						AdjustMotorSpd(MOTOR_RL,1,40);
-						AdjustMotorSpd(MOTOR_RR,1,40);
+						AdjustMotorSpd(MOTOR_RL,1,20);
+						AdjustMotorSpd(MOTOR_RR,1,20);
 						AdjustMotorBalance(m_sensor[0].ps);
 					}
 					else{
@@ -564,13 +571,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 		sn=GetCmd(buf,&rbuf,&sp,len);	
 	}
 }
-INT8U CheckSelf(void)
-{
-	return 1;
-	
 
-	return 0;
-}
 
 void RunCmdProc(RFID *p_rfid)
 {
@@ -697,10 +698,14 @@ void TurnCtrl(IDCMD *p_ic)
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;*/
 		if(!GetTurnBreak())
-			if(sro<(ANGLE_DT<<2)) 
-				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>1);
+			if(sro<(ANGLE_DT<<4))
+				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>8+(sro>>4)?8+(sro>>4):p_ic->spd);
 			else
 				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd);
+			/*if(sro<(ANGLE_DT<<2)) 
+				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>1);
+			else
+				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd);*/
 
 		if(m_sensor[0].turnspeed<ZERO_SPD)
 		{
@@ -743,7 +748,10 @@ void TiltCtrl(IDCMD *p_ic)
             dspd=SPD_DT_LMT;
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;*/
-        AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd);
+		if(stilt<(TILT_DT<<2))
+			AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd>stilt+10?stilt+10:p_ic->spd);
+		else
+			AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd);
 
     }
 }
@@ -912,3 +920,107 @@ void UartSendProc(INT8U n,INT8U chl)
 	NetSend(n,chl);
 }
 
+#define CHECK_TA	450
+INT8U CheckSelf(void)
+{
+	INT32S tmp[2],n;//re=0x400;
+	return 0;//debug »°œ˚
+	//1
+	m_car.err=0xf;
+	tmp[0]=m_sensor[0].r_np[0];
+	tmp[1]=m_sensor[0].r_np[1];
+	n=10;
+	while(n--){
+		AdjustMotorSpd(MOTOR_RL,2,20);
+		AdjustMotorSpd(MOTOR_RR,2,20);
+		OSTimeDly(100);
+		if(m_sensor[0].r_np[0]>tmp[0]+2&&m_sensor[0].r_np[1]>tmp[1]+2){
+			m_car.err&=0xe;
+			break;
+		}
+	}
+	SetMotorSpd(MOTOR_RL,0);
+	SetMotorSpd(MOTOR_RR,0);
+	//2
+	tmp[0]=m_sensor[0].t_np;
+	n=10;
+	TurnLeft();
+	while(n--){
+		AdjustMotorSpd(MOTOR_TURN,2,20);
+		OSTimeDly(100);
+		if(m_sensor[0].t_np>tmp[0]+2){
+			m_car.err&=0xd;
+			break;
+		}
+	}
+	tmp[0]=0;
+	while(TURNANGLEMODIFY(m_car.turnangle_np)<CHECK_TA){
+		if(m_sensor[0].b_hall|B_HALL_C){
+			tmp[0]++;
+			break;
+		}
+		OSTimeDly(100);
+	}
+	if(tmp[0]==0){
+		SetMotorSpd(MOTOR_TURN,0);
+		OSTimeDly(3000);
+		TurnRight();
+		while(TURNANGLEMODIFY(m_car.turnangle_np)>-CHECK_TA){
+			AdjustMotorSpd(MOTOR_TURN,2,20);
+			if(m_sensor[0].b_hall|B_HALL_C){
+				tmp[0]++;
+				break;
+			}
+			OSTimeDly(100);
+		}
+	}
+	if(tmp[0])
+		m_car.err&=0xb;;
+	SetMotorSpd(MOTOR_TURN,0);
+	OSTimeDly(3000);
+	while(m_car.turnangle_np>(ANGLE_DT>>2)){
+		TurnRight();
+		AdjustMotorSpd(MOTOR_TURN,2,10);
+		OSTimeDly(100);
+	}
+	while(m_car.turnangle_np<-(ANGLE_DT>>2)){
+		TurnLeft();
+		AdjustMotorSpd(MOTOR_TURN,2,10);
+		OSTimeDly(100);
+	}
+	SetMotorSpd(MOTOR_TURN,0);
+	//4
+	tmp[0]=m_sensor[0].tilt;
+	n=10;
+	while(n--){
+		if(tmp[0]>TILT_DT){
+			CloseDownRelay();
+			OpenUpRelay();
+		}
+		else{
+			CloseUpRelay();
+			OpenDownRelay();
+		}
+		AdjustMotorSpd(MOTOR_TILT,2,20);
+		OSTimeDly(100);
+		if(m_sensor[0].tilt>tmp[0]+(TILT_DT<<1)||tmp[0]>m_sensor[0].tilt+(TILT_DT<<1)){
+			m_car.err&=0x7;
+			break;
+		}
+	}
+	while(m_sensor[0].tilt>TILT_DT){
+		CloseDownRelay();
+		OpenUpRelay();
+		OSTimeDly(200);
+	}
+	while(m_sensor[0].tilt<-TILT_DT){
+		CloseUpRelay();
+		OpenDownRelay();
+		OSTimeDly(200);
+	}
+	CloseAllRelay();
+	SetMotorSpd(MOTOR_TILT,0);	
+	//
+
+	return m_car.err;
+}

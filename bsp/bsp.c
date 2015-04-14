@@ -843,14 +843,14 @@ void Spi2_Istr(void)
 {
 
 }
-#define STOP_TICK_LEN   2000
+#define STOP_TICK_LEN   1500
 void SpdCap_Istr(INT8U chl,INT16U cn)
 {
 //	static INT32U lasttick[4]={0,0,0,0};
 	static INT16U lastcap[4]={0,0,0,0};
 	INT32U tick=OSTimeGet();
 	chl=(chl>>2)&3;
-	if(tick>lastcaptick[chl]+STOP_TICK_LEN)	//4s 无脉冲认为停止
+	if(tick>lastcaptick[chl]+STOP_TICK_LEN)	//s 无脉冲认为停止
 		Spd_Motor[chl]=0xffff;
 	else if(cn>=lastcap[chl])
 			Spd_Motor[chl]=cn-lastcap[chl];
