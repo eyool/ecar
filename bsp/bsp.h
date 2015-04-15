@@ -231,6 +231,7 @@ typedef struct _SYSSET{
 #define UHFID_FRAME_END   0x8e
 
 #define MOTOR_ZERO_OFF  0x50
+#define MOTOR_TILT_ZERO_OFF  0x28
 //函数 
 void SetCenter(void);
 
@@ -290,7 +291,7 @@ void SetCfgMd5(INT32U *buf);
 void CfgClear(void);
 INT16U CfgWriteId(INT8U *buf,INT8U len);
 INT32U CheckCfgSum(void);
-
+void StartIWDG(void);
 /**********************************************************************************************************
 *api  系统提供API ，供应应用程序调用
 *

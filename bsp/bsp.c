@@ -986,24 +986,29 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		sspd=100;
 	if(sspd<0)
 		sspd=0;	
-	sspd>>=1;
-	sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
+
 
 	switch(chl){
 	case MOTOR_TURN:	
+		sspd>>=1;
+		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
 
 		TIM_SetCompare1(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
-	case MOTOR_TILT:	
+	case MOTOR_TILT:
+		//sspd>>=1;
+		sspd=MOTOR_TILT_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_TILT_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture2(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
 		TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
 	case MOTOR_RL:	
+		sspd>>=1;
+		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
@@ -1014,6 +1019,8 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 			CloseRunBreak();
 		break;
 	case MOTOR_RR:	
+		sspd>>=1;
+		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
 			ss=dspd>0?MOTOR_ZERO_OFF:0;
@@ -1436,4 +1443,17 @@ INT16U GetFrontSafeDis(void)
 {
 	return safedis;
 }
+#define LsiFreq 40000
+#define IWDG_TOVER 1
+void StartIWDG(void)
+{
+	IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
+	IWDG_SetPrescaler(IWDG_Prescaler_32);
+	IWDG_SetReload(LsiFreq*IWDG_TOVER/32);
 
+  /* Reload IWDG counter */
+  IWDG_ReloadCounter();
+
+  /* Enable IWDG (the LSI oscillator will be enabled by hardware) */
+  IWDG_Enable();
+}

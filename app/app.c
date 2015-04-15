@@ -48,14 +48,14 @@ void App_init(void)
 //  Wifi_SetReSrv();
 //	OSTimeDly(500);	
 
-
+//#define TEST 1	
+#ifndef	TEST	
 	while(WifiStatus()<WIFI_LINK_OK){
 		Wifi_SetReSrv();
 		OSTimeDly(500);			
 	}
 	
-//#define TEST 1	
-#ifndef	TEST	
+
 	if(CheckSelf()==0){	
 		while(!DowloadCFG()){
 			WifiLink();
@@ -68,6 +68,7 @@ void App_init(void)
 //	test();
 	m_car.status=CAR_STATUS_INIT;
 	UhfidSwitch(UHFID_CMD_OPEN);
+	StartIWDG();
 }
 //--------------------
 void nopf(void)
@@ -197,6 +198,7 @@ void AppRunProc(void  *p_msg)
 				break;
 			case CAR_STATUS_JOIN:
 				sw_power=1;
+				OSTimeDly(1000);
 				CloseRunBreak();
 				if(m_car.p_rfid[0]&&m_car.p_rfid[0]->id){
 					m_car.status=CAR_STATUS_WAITCMD;
@@ -749,9 +751,9 @@ void TiltCtrl(IDCMD *p_ic)
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;*/
 		if(stilt<(TILT_DT<<2))
-			AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd>stilt+10?stilt+10:p_ic->spd);
+			AdjustMotorSpd(MOTOR_TILT,2,p_ic->spd>(stilt<<1)?(stilt<<1):p_ic->spd);
 		else
-			AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd);
+			AdjustMotorSpd(MOTOR_TILT,2,p_ic->spd);
 
     }
 }
@@ -761,6 +763,7 @@ void SW_Power(void)
 		SetSafeLine();
 	else
 		ResetSafeLine();
+	IWDG_ReloadCounter();
 }
 int RegisterCar(INT8U id,INT32U pos)
 {	
