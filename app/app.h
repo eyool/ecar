@@ -76,9 +76,12 @@ typedef struct _CAR{
 #define C_PC_ACT_TILT		10
 #define C_PC_SENSOR			11
 #define C_PC_MCMD			12/*ÊÖ¶¯¿ØÖÆ*/
+#define C_PC_SETADDR        13
+
 #define C_PC_MCMD_IN			0x80
 #define C_PC_MCMD_OUT			0x81
 #define C_PC_MCMD_RUN			0x82
+
 
 #define C_PC_SYSERR        0xfc
 #define C_PC_SYSRST        0xfd

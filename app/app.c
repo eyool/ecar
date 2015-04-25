@@ -37,7 +37,8 @@ void App_init(void)
 	memset((void *)m_sensor,0,sizeof(m_sensor));
 	memset((void *)&m_car,0,sizeof(CAR));
 	memset((void *)&m_icmd,0,sizeof(IDCMD));
-	m_car.cid=GetAddr();
+	m_car.cid=m_sysset.cid;//GetAddr();
+	SetAddr(m_car.cid);
 	m_car.status=CAR_STATUS_NULL;
 	//n_uartTX=0;
 //	p_rfid=NULL;
@@ -185,7 +186,8 @@ void AppRunProc(void  *p_msg)
 				if(!m_car.err){
 					Systbuf[0]=C_PC_CFG_JOIN;
 					Systbuf[1]=GetKey()&KEY_JOIN;
-					NetSend(2,NET_CHL_ALL);//INIT
+					Get_SerialNum((INT32U *)(Systbuf+2));//12字节
+					NetSend(14,NET_CHL_ALL);//INIT
 					OSTimeDly(1000);
 				}
 				else{
@@ -251,7 +253,8 @@ void AppRunProc(void  *p_msg)
 //任务函数 4/4
 void SensorProc(void)
 {
-	static INT16S hbuf[6]={0,0,0,0,0,0};
+	static INT32S abuf[2]={0,0};
+	static INT16S hbuf[4]={0,0,0,0};
 //	static INT8U  bn=0;
 	INT16S buf[9]; 
 	SENSOR *p_sensor=&m_sensor[0];
@@ -261,19 +264,19 @@ void SensorProc(void)
 	memcpy((void *)&m_sensor[1],(void *)&m_sensor[0],sizeof(SENSOR));
 	//得到霍尔 ，加速度，压力传感器
 	ADXL_GetData((INT8U *)buf,6);
-	hbuf[0]=((int)hbuf[0]*7>>3)+buf[0];
-	hbuf[1]=((int)hbuf[1]*7>>3)+buf[1];	
-	p_sensor->tilt=GetArc(hbuf[0]-(p_ss->g_offx<<3),hbuf[1]-(0x100-p_ss->g_offy<<3));	
+	abuf[0]=((int)abuf[0]*31>>5)+buf[0];
+	abuf[1]=((int)abuf[1]*31>>5)+buf[1];
+	p_sensor->tilt=GetArc(abuf[0]-(p_ss->g_offx<<5),abuf[1]-(0x100-p_ss->g_offy<<5));	
 	HMC_GetData((INT8U *)(buf+3),12);
-	hbuf[2]=((int)hbuf[2]*7>>3)+buf[3];
-	hbuf[3]=((int)hbuf[3]*7>>3)+buf[5];	
-	p_sensor->rotation[0]=GetArc(hbuf[2],hbuf[3]);	
-	hbuf[4]=((int)hbuf[4]*7>>3)+buf[6];
-	hbuf[5]=((int)hbuf[5]*7>>3)+buf[8];		
-	p_sensor->rotation[1]=GetArc(hbuf[4],hbuf[5]);	
+	hbuf[0]=((int)hbuf[0]*7>>3)+buf[3];
+	hbuf[1]=((int)hbuf[1]*7>>3)+buf[5];	
+	p_sensor->rotation[0]=GetArc(hbuf[0],hbuf[1]);	
+	hbuf[2]=((int)hbuf[2]*7>>3)+buf[6];
+	hbuf[3]=((int)hbuf[3]*7>>3)+buf[8];		
+	p_sensor->rotation[1]=GetArc(hbuf[2],hbuf[3]);	
 	//------------更新偏移量
-	m_sysset.g_offx=hbuf[0]>>3;
-	m_sysset.g_offy=hbuf[1]>>3;
+	m_sysset.g_offx=abuf[0]>>5;
+	m_sysset.g_offy=abuf[1]>>5;
 	m_sysset.hmc_off=p_sensor->rotation[0]-p_sensor->rotation[1];
 	if(m_sysset.hmc_off>=1800)
 		m_sysset.hmc_off-=3600;
@@ -562,13 +565,20 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					else if(rbuf[1]!=C_PC_MCMD_IN)
 						 memcpy((INT8U *)&m_icmd,rbuf+1,sn-1);
 				}
-				
+				break;
+			case C_PC_SETADDR:		//addr  id(12byte)
+				Get_SerialNum((INT32U *)Systbuf);
+				if(memcmp(Systbuf,rbuf+2,12)==0){
+					m_car.cid=rbuf[1];
+					m_sysset.cid=rbuf[1];
+					SetAddr(rbuf[1]);
+					SaveSysSet();
+				}
 				break;
 			case C_PC_SYSRST:
-				if(*(INT32U *)(rbuf+2)==PROGRAMM_KEY&&rbuf[1]==GetAddr())
+				if(*(INT32U *)(rbuf+2)==PROGRAMM_KEY&&rbuf[1]==m_car.cid)//GetAddr()
 					NVIC_SystemReset();
 				break;
-
 		}
 		sn=GetCmd(buf,&rbuf,&sp,len);	
 	}

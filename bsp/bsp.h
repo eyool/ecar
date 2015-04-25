@@ -25,6 +25,7 @@ typedef struct _SYSSET{
 	INT16S g_offx,g_offy,g_offz,rev;
 	INT16S	 hmc_off;
 	INT16U rfid;
+	INT8U cid;
 
 }SYSSET;
 
@@ -257,7 +258,7 @@ void         BSP_Init(void);
 void         BSP_IntDisAll (void);
 INT32U       BSP_CPU_ClkFreq(void);
 void         GPIO_Configuration(void);
-void Get_SerialNum(void);
+void Get_SerialNum(INT32U *sbuf);
 void Reset_Device(void);
 
 void SpiRead(INT8U addr,INT8U *buf,INT8U n,INT8U sel);
@@ -395,6 +396,7 @@ void ZigbeeLink(void);
 INT8U IsNetData(INT8U *buf,INT8U len);
 //得到本机地址
 INT8U GetAddr(void);
+void SetAddr(INT8U addr);
 //查询ID卡数据，返回找到的结构体地址，0：没找到
 RFID * GetRfidStruct(INT16U id);
 //uhfid command 开启 关闭

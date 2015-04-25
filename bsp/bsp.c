@@ -142,23 +142,24 @@ void GPIO_Configuration(void)
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE); 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE); 
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE); 	
+  RCC_APB2PeriphClockCmd(SAFELINE_APB2, ENABLE);
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;	
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5; //2,3
+/* GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5; //2,3
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
   GPIO_Init(GPIOC, &GPIO_InitStructure); 
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2; 	//1
   GPIO_Init(GPIOB, &GPIO_InitStructure); 	
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5; 	//0
-  GPIO_Init(GPIOA, &GPIO_InitStructure); 		
+  GPIO_Init(GPIOA, &GPIO_InitStructure); 		*/
   //led config PC10 safeline	
-  RCC_APB2PeriphClockCmd(SAFELINE_APB2, ENABLE); 	
+ 	
   GPIO_InitStructure.GPIO_Pin = SAFELINEPS_PIN; 
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_Init(SAFELINEPS_PORT, &GPIO_InitStructure);  
   GPIO_SetBits(SAFELINEPS_PORT,SAFELINEPS_PIN);
 	//µ√µΩµÿ÷∑
-  uDelay(150);
-  DevAddr=GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_5)|((GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_2))<<1)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_4))<<2)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_5))<<3);
+//  uDelay(150);
+//  DevAddr=GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_5)|((GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_2))<<1)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_4))<<2)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_5))<<3);
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5; //2,3
   GPIO_Init(GPIOC, &GPIO_InitStructure); 	
@@ -689,23 +690,16 @@ void PS_init(void)
 * Output         : None.
 * Return         : None.
 *******************************************************************************/
-void Get_SerialNum(void)
+void Get_SerialNum(INT32U *sbuf)
 {
-  uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
+ // uint32_t Device_Serial0, Device_Serial1, Device_Serial2;
 
   
-  Device_Serial0 = *(__IO uint32_t*)(0x1FFFF7E8);
-  Device_Serial1 = *(__IO uint32_t*)(0x1FFFF7EC);
-  Device_Serial2 = *(__IO uint32_t*)(0x1FFFF7F0);
+  sbuf[0] = *(__IO uint32_t*)(0x1FFFF7E8);
+  sbuf[1] = *(__IO uint32_t*)(0x1FFFF7EC);
+  sbuf[2] = *(__IO uint32_t*)(0x1FFFF7F0);
 
-  
-  Device_Serial0 += Device_Serial2;
-
-  if (Device_Serial0 != 0)
-  {
-    //IntToUnicode (Device_Serial0, &CustomHID_StringSerial[2] , 8);
-    //IntToUnicode (Device_Serial1, &CustomHID_StringSerial[18], 4);
-  }
+ 
 }
 /*******************************************************************************
 * Function Name  : HexToChar.
@@ -1250,6 +1244,10 @@ INT8U WifiStatus(void)
 INT8U GetAddr(void)
 {
 	return DevAddr;
+}
+void SetAddr(INT8U addr)
+{
+	DevAddr=addr;
 }
 //-------------------------------
 INT8U CheckSum8(INT8U *buf,INT32U len)
