@@ -1177,7 +1177,7 @@ void WifiLink(void)
 {
 #ifdef NOAUTOLINK
 	return;
-#endif
+#else
 	if(OSTimeGet()>WIFI_OVTETIME+WifiLinkTime){
 		if(NRst_Wifi++>WIFI_NRST){			
 			NRst_Wifi=0;
@@ -1189,6 +1189,7 @@ void WifiLink(void)
 		Wifi_SetReSrv();
 		WifiLinkTime+=WIFI_OVTETIME;
 	}
+#endif
 }
 void ZigbeeLink(void)
 {

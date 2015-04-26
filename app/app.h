@@ -136,7 +136,7 @@ void NetCmdProc(INT8U *buf,INT8U len);
 void RunCmdProc(RFID *p_rfid);
 void RunCtrl(IDCMD *p_ic);
 void TurnCtrl(IDCMD *p_ic);
-void TiltCtrl(IDCMD *p_ic);
+int TiltCtrl(IDCMD *p_ic);
 void SW_Power(void);
 int   RegisterCar(INT8U id,INT32U pos);
 void UnRegisterCar(INT8U id);

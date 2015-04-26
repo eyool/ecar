@@ -116,9 +116,10 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 			if(buf[4]=='='&&buf[5]=='U'&&buf[6]=='2'){
 				if(buf[7]=='W')
 					debugcmd=buf[8]&1;
-				if(buf[7]=='Z')
+				else if(buf[7]=='Z')
 					debugcmd=(buf[8]&1)<<1;	
-					return;
+				b_debug=debugcmd;
+				return;
 			}
 	}	
 	if(debugcmd&1){//u2w
@@ -144,7 +145,7 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 				SetWifiLinkTime();						
 			}
 	
-			Debug(buf,len);
+			//Debug(buf,len);//ÖØ¸´È¡Ïû
 		}		
 		else if(chl==UART_CHL_ZIGBEE){
 			if(IsNetData(buf,len)){
@@ -584,19 +585,23 @@ void NetCmdProc(INT8U *buf,INT8U len)
 	}
 }
 
-
+#define TYPE_TILT_HALF	1
+#define TYPE_TILT_ONE	2
 void RunCmdProc(RFID *p_rfid)
 {
+//	static INT8U n_tilt=0;
+	static IDCMD tilt_ic;
+	static RFID *lp_rfid=0;
 	int i;
 	INT32U dt;
 	if(p_rfid){
 		for (i=0;i<p_rfid->n_idcmd;i++){
 			IDCMD *p_ic = FindUhfidCmd(p_rfid);
 			dt=OSTimeGet()-m_car.l_tick;
-			if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+			//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 			switch(p_ic->cmd){
 					case  CAR_CMD_RUN:
-						//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							RunCtrl(p_ic);
 						//else{
 						//	SetMotorSpd(MOTOR_RL,0);
@@ -604,15 +609,31 @@ void RunCmdProc(RFID *p_rfid)
 						//}
 						break;
 					case 	CAR_CMD_TURN:
-						//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TurnCtrl(p_ic);
 						//else
 						//	SetMotorSpd(MOTOR_TURN,0);
 						break;
 					case 	CAR_CMD_TILT:
-						//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
-							TiltCtrl(p_ic);
+						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0)){
+							if(lp_rfid!=p_rfid||tilt_ic.tick!=p_ic->tick)
+								memcpy((INT8U *)&tilt_ic,(INT8U *)p_ic,sizeof(IDCMD));
+							
+							if(TiltCtrl(&tilt_ic)){
+								if(tilt_ic.type==TYPE_TILT_HALF)
+									tilt_ic.dis=0;
+								if(tilt_ic.type==TYPE_TILT_ONE){
+									if(tilt_ic.dis==p_ic->dis)
+										tilt_ic.dis=-p_ic->dis;
+									else
+										tilt_ic.dis=0;
+								}
+
+							}
+							//b_tilt=1;
+						}
 						//else
+							//n_tilt=0;
 						//	SetMotorSpd(MOTOR_TILT,0);
 						break;
 					case 	CAR_CMD_PLAY:
@@ -621,6 +642,7 @@ void RunCmdProc(RFID *p_rfid)
 			}
 		}
 	}
+	lp_rfid=p_rfid;
 }
 #define SPD_DT_LMT 5
 void RunCtrl(IDCMD *p_ic)
@@ -731,7 +753,7 @@ void TurnCtrl(IDCMD *p_ic)
 }
 #define TILT_MAX    100
 #define TILT_DT    10
-void TiltCtrl(IDCMD *p_ic)
+int TiltCtrl(IDCMD *p_ic)
 {
     int dir=0;
     int stilt=p_ic->dis-(m_sensor[0].tilt+m_sensor[1].tilt>>1);
@@ -746,6 +768,7 @@ void TiltCtrl(IDCMD *p_ic)
     if (stilt<TILT_DT) {
         SetMotorSpd(MOTOR_TILT,0); 
         CloseAllRelay();
+		return 1;
     }
     else{
         if (dir){
@@ -764,7 +787,7 @@ void TiltCtrl(IDCMD *p_ic)
 			AdjustMotorSpd(MOTOR_TILT,2,p_ic->spd>(stilt<<1)?(stilt<<1):p_ic->spd);
 		else
 			AdjustMotorSpd(MOTOR_TILT,2,p_ic->spd);
-
+		return 0;
     }
 }
 void SW_Power(void)
