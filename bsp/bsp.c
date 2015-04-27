@@ -20,6 +20,7 @@ SYSSET m_sysset;
 INT32U lastcaptick[4]={0,0,0,0};
 INT32U uarttmsg[2];
 INT16U safedis=10000;
+INT8U TurnDir;
 //INT16U  ADC_RegularConvertedValueTab[ADC_N_CH];
 //INT16U  ADC_samplebuf[ADC_N_CH];
 static void IntToUnicode (uint32_t value , uint8_t *pbuf , uint8_t len);
@@ -102,6 +103,7 @@ void  BSP_Init (void)
 		Spd_Motor[i]=0xffff;
 		Spd_Motor_cn[i]=0;
 	}
+	TurnDir=0;
 	IsCenter=0;
 	memcpy((INT8U *)&m_sysset,(INT8U *)SYSSET_ADDR,sizeof(m_sysset));
 	
@@ -852,7 +854,17 @@ void SpdCap_Istr(INT8U chl,INT16U cn)
 			Spd_Motor[chl]=0x10000-lastcap[chl]+cn;
 	lastcaptick[chl]=tick;
 	lastcap[chl]=cn;
-	Spd_Motor_cn[chl]++;
+	
+	if(chl==0){//--turn dir check
+		TurnDir=GetTurnDir();
+		if(TurnDir)
+			Spd_Motor_cn[chl]++;
+		else
+			Spd_Motor_cn[chl]--;
+
+	}
+	else
+		Spd_Motor_cn[chl]++;
 }
 
 //-------------------
@@ -984,7 +996,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 
 	switch(chl){
 	case MOTOR_TURN:	
-		sspd>>=1;
+		sspd=sspd*3>>2;
 		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
@@ -1001,7 +1013,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
 	case MOTOR_RL:	
-		sspd>>=1;
+		sspd=sspd*3>>2;
 		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
@@ -1013,7 +1025,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 			CloseRunBreak();
 		break;
 	case MOTOR_RR:	
-		sspd>>=1;
+		sspd=sspd*3>>2;
 		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)

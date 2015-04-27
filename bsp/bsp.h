@@ -293,12 +293,13 @@ void CfgClear(void);
 INT16U CfgWriteId(INT8U *buf,INT8U len);
 INT32U CheckCfgSum(void);
 void StartIWDG(void);
+
+
+#define GetTurnDir()		GPIO_ReadOutputDataBit(GPIOC,GPIO_Pin_1)
 /**********************************************************************************************************
 *api  系统提供API ，供应应用程序调用
 *
 ********************************************************************************************************/
-
-
 
 #define OpenUpRelay() 		GPIO_SetBits(GPIOC,GPIO_Pin_4)/*打开上升液压电磁阀*/
 #define OpenDownRelay() 	GPIO_SetBits(GPIOC,GPIO_Pin_5)/*打开下降液压电磁阀*/
@@ -310,7 +311,6 @@ void StartIWDG(void);
 #define OpenTurnBreak()   GPIO_SetBits(GPIOA,GPIO_Pin_5)/*刹车控制*/
 #define CloseTurnBreak()  GPIO_ResetBits(GPIOA,GPIO_Pin_5)
 #define GetTurnBreak()		GPIO_ReadOutputDataBit(GPIOA,GPIO_Pin_5)
-#define GetTurnDir()		GPIO_ReadOutputDataBit(GPIOB,GPIO_Pin_5)
 #define OpenUS() 					GPIO_SetBits(GPIOC,GPIO_Pin_2)  /*打开超声测距*/
 #define CloseUS() 				GPIO_ResetBits(GPIOC,GPIO_Pin_2) 
 #define GetUS() 					GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_3)/*超声回应脚状态*/

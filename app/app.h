@@ -10,12 +10,13 @@
 typedef unsigned int   UINT;
 extern OS_EVENT      *App_StartMbox;
 extern SYSSET m_sysset;
-
+extern INT8U TurnDir;
 
 typedef struct _SENSOR{
 	INT32S		ps;		/*压力值*/
 //	INT32S		pos;/*车体离起点位置 ，cm*/		
-	INT32U 	r_np[2],t_np,lastt_np;/*前进计数,角度计数,旋转上次记录计数*/
+	INT32U 	r_np[2];/*前进计数*/
+	INT32S	t_np,lastt_np;/*,角度计数,旋转上次记录计数*/
 	INT16S		tilt;/*倾角-1800-1799*/
 	INT16S		rotation[2];/*转角-1800-1799*/	
 	INT16S		runspeed[2];/*轮子转速，*/

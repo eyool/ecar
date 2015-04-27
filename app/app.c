@@ -293,24 +293,25 @@ void SensorProc(void)
 		p_sensor->turnspeed=GetMotorSpd(MOTOR_TURN);
 		p_sensor->runspeed[0]=GetMotorSpd(MOTOR_RL);	
 		p_sensor->runspeed[1]=GetMotorSpd(MOTOR_RR);
-		p_sensor->t_np=GetMotorPoscn(MOTOR_TURN);
+		p_sensor->t_np=(INT32S)GetMotorPoscn(MOTOR_TURN);
 		p_sensor->r_np[0]=GetMotorPoscn(MOTOR_RL);	
 		p_sensor->r_np[1]=GetMotorPoscn(MOTOR_RR);
 	//---检查是否回正
 		if(CheckCenter()){
 			p_sensor->b_hall|=B_HALL_C;
 			p_sensor->lastt_np=p_sensor->t_np;
-			m_car.turnangle_np=0;
+			//m_car.turnangle_np=0;
 		}
 		else
 			p_sensor->b_hall&=(~B_HALL_C);	
 	//计算角度对应np
-		tmp=p_sensor->t_np-p_sensor->lastt_np;
+		m_car.turnangle_np=p_sensor->t_np-p_sensor->lastt_np;
+		/*tmp=p_sensor->t_np-p_sensor->lastt_np;
 		p_sensor->lastt_np=p_sensor->t_np;
 		if(GetTurnDir())
 			m_car.turnangle_np+=tmp;
 		else
-			m_car.turnangle_np-=tmp;
+			m_car.turnangle_np-=tmp;*/
 
 
 	//这里添加测距函数
@@ -984,7 +985,7 @@ INT8U CheckSelf(void)
 	while(n--){
 		AdjustMotorSpd(MOTOR_TURN,2,20);
 		OSTimeDly(100);
-		if(m_sensor[0].t_np>tmp[0]+2){
+		if(m_sensor[0].t_np>tmp[0]+2||m_sensor[0].t_np+2<tmp[0]){
 			m_car.err&=0xd;
 			break;
 		}
