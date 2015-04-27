@@ -768,7 +768,8 @@ int TiltCtrl(IDCMD *p_ic)
 
     if (stilt<TILT_DT) {
         SetMotorSpd(MOTOR_TILT,0); 
-        CloseAllRelay();
+		if(p_ic->dis==0)
+			CloseAllRelay();
 		return 1;
     }
     else{
