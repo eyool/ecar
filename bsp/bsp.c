@@ -203,7 +203,10 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;		
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4; 
   GPIO_Init(GPIOA, &GPIO_InitStructure); 		
-	
+	//cntd Ðý×ª·½Ïò
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;	
+	GPIO_InitStructure.GPIO_Pin =GPIO_Pin_1;
+  GPIO_Init(GPIOC, &GPIO_InitStructure); 
   /* Connect EXTI4 Line to PA.04 pin */
   GPIO_EXTILineConfig(GPIO_PortSourceGPIOA, GPIO_PinSource4);
 
@@ -540,6 +543,7 @@ void SpdCap_init(void)
    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
    GPIO_Init(SPDCAP_PORT, &GPIO_InitStructure); 
+	
    //  /* Time base configuration */
   TIM_TimeBaseStructInit(&TIM_TimeBaseStructure); 
   TIM_TimeBaseStructure.TIM_Period = 0xffff;
@@ -858,9 +862,9 @@ void SpdCap_Istr(INT8U chl,INT16U cn)
 	if(chl==0){//--turn dir check
 		TurnDir=GetTurnDir();
 		if(TurnDir)
-			Spd_Motor_cn[chl]++;
-		else
 			Spd_Motor_cn[chl]--;
+		else
+			Spd_Motor_cn[chl]++;
 
 	}
 	else

@@ -295,7 +295,7 @@ INT32U CheckCfgSum(void);
 void StartIWDG(void);
 
 
-#define GetTurnDir()		GPIO_ReadOutputDataBit(GPIOC,GPIO_Pin_1)
+#define GetTurnDir()		GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_1)
 /**********************************************************************************************************
 *api  系统提供API ，供应应用程序调用
 *
