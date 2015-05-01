@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <root>
 	<hid>
-		<id1 pos="0" id="1" area="1" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id1>
+		<id1 pos="0" id="1" area="1" safedis="1000"><cmd1 dis="1000" cmd="r" spd="70"></cmd1></id1>
 		<id2 pos="100" id="100" area="1" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id2>
 		<id3 pos="200" id="200" area="1" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id3>
 		<id4 pos="300" id="300" area="1" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id4>
 		<id5 pos="400" id="400" area="1" safedis="1000"><cmd1 spd="50" dis="1000" cmd="r"></cmd1></id5>
 		<id6 pos="500" id="500" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id6>
-		<id7 pos="600" id="600" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1><cmd2 dis="800" spd="80" tick="30" cmd="t" runtime="200"/><cmd4 tick="230" runtime="20" cmd="p"></cmd4><cmd5 dis="0" spd="50" tick="270" cmd="t" runtime="200"/></id7>
+		<id7 pos="600" id="600" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1><cmd2 dis="800" spd="80" tick="30" cmd="t" runtime="200"/><cmd4 tick="230" runtime="20" cmd="p"></cmd4><cmd5 dis="0" spd="55" tick="270" cmd="t" runtime="200"/></id7>
 		<id8 pos="700" id="700" area="2" safedis="1000"><cmd1 spd="60" dis="1000" cmd="r"></cmd1></id8>
 		<id9 pos="800" id="800" area="2" safedis="1000"><cmd1 spd="30" dis="1000" cmd="r"></cmd1></id9>
 		<id10 pos="900" id="900" area="2" safedis="1000"><cmd1 spd="10" dis="1000" cmd="r"></cmd1></id10>
-		<id11 pos="1000" id="1000" area="2" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1><cmd2 dis="800" spd="80" tick="30" cmd="t" runtime="200"/><cmd4 tick="230" runtime="20" cmd="p"></cmd4><cmd5 dis="0" spd="50" tick="260" cmd="t" runtime="200"/></id11>
+		<id11 pos="1000" id="1000" area="2" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1><cmd2 dis="800" spd="80" tick="30" cmd="t" runtime="200"/><cmd4 tick="230" runtime="20" cmd="p"></cmd4><cmd5 dis="0" tick="260" cmd="t" runtime="200" spd="70"/></id11>
 		<id12 pos="1200" id="1200" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id12>
 		<id13 pos="1400" id="1400" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id13>
 		<id14 pos="1600" id="1600" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id14>
