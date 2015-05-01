@@ -862,9 +862,9 @@ void SpdCap_Istr(INT8U chl,INT16U cn)
 	if(chl==0){//--turn dir check
 		TurnDir=GetTurnDir();
 		if(TurnDir)
-			Spd_Motor_cn[chl]++;
-		else
 			Spd_Motor_cn[chl]--;
+		else
+			Spd_Motor_cn[chl]++;
 
 	}
 	else

@@ -884,9 +884,9 @@ void MCmdProc(void)
 			break;
 		case CAR_CMD_TURN:
 			if(m_icmd.dis>=0)
-				TurnRight();
-			else{
 				TurnLeft();
+			else{
+				TurnRight();
 				m_icmd.dis=-m_icmd.dis;
 			}
 			while(spos+(m_icmd.dis&0xff)>m_car.pos&&m_icmd.runtime*100+stime>OSTimeGet()){
