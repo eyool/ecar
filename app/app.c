@@ -18,7 +18,7 @@ IDCMD m_icmd;
 //RFID *p_rfid;
 CAR m_car;
 //----------
-float test(void)
+/*float test(void)
 {
 	IDCMD * p_ic=FindUhfidCmd((RFID *)0x800c400);
 		IDCMD *p2;
@@ -28,7 +28,7 @@ float test(void)
 		return 1;
 	else
 		return 0;
-}
+}*/
 
 void App_init(void)
 {
@@ -586,20 +586,65 @@ void NetCmdProc(INT8U *buf,INT8U len)
 	}
 }
 
-#define TYPE_TILT_HALF	1
-#define TYPE_TILT_ONE	2
+#define TYPE_TILT_HALF		1
+#define TYPE_TILT_ONE		2
+#define TYPE_TILT_ALWAYS	3
 void RunCmdProc(RFID *p_rfid)
 {
 //	static INT8U n_tilt=0;
 	static IDCMD tilt_ic;
+	static IDCMD const ctilt_ic={0,0,'a',0,20,0};
+	static IDCMD const turn_ic={0,0,'t',0,30,0};
+//	static const IDCMD run_ic={.tick=0,.cmd='r',.dis=0,.spd=0};
 	static RFID *lp_rfid=0;
-	int i;
+//	int i;
 	INT32U dt;
+	IDCMD *p_ic;
 	if(p_rfid){
-		for (i=0;i<p_rfid->n_idcmd;i++){
-			IDCMD *p_ic = FindUhfidCmd(p_rfid);
-			dt=OSTimeGet()-m_car.l_tick;
-			//if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+		//=&p_rfid->p_idcmd;
+		dt=OSTimeGet()-m_car.l_tick;
+		//run
+		p_ic=FindUhfidCmd(p_rfid,CAR_CMD_RUN,dt);
+		if(p_ic)
+			RunCtrl(p_ic);
+		else if(FindUhfidNextCmd(p_rfid,CAR_CMD_RUN,dt)==0){
+			SetMotorSpd(MOTOR_RL,0);
+			SetMotorSpd(MOTOR_RR,0);
+		}
+
+		//turn
+		p_ic=FindUhfidCmd(p_rfid,CAR_CMD_TURN,dt);
+		if(p_ic)
+			TurnCtrl(p_ic);
+		else if(FindUhfidNextCmd(p_rfid,CAR_CMD_TURN,dt)==0)
+			TurnCtrl((IDCMD *)&turn_ic);
+		
+		//tilt
+		p_ic=FindUhfidCmd(p_rfid,CAR_CMD_TILT,dt);
+		if(p_ic){
+			if(lp_rfid!=p_rfid||tilt_ic.tick!=p_ic->tick)
+				memcpy((INT8U *)&tilt_ic,(INT8U *)p_ic,sizeof(IDCMD));
+
+			if(TiltCtrl(&tilt_ic)){
+				if(tilt_ic.type==TYPE_TILT_HALF)
+					tilt_ic.dis=0;
+				else if(tilt_ic.type==TYPE_TILT_ONE){
+					if(tilt_ic.dis==p_ic->dis)
+						tilt_ic.dis=-p_ic->dis;
+					else
+						tilt_ic.dis=0;
+				}
+				else if(tilt_ic.type==TYPE_TILT_ALWAYS)
+					tilt_ic.dis=-tilt_ic.dis;
+
+			}
+		}
+		else if(FindUhfidNextCmd(p_rfid,CAR_CMD_TILT,dt)==0)
+			TiltCtrl((IDCMD *)&ctilt_ic);
+		
+		/*
+		for (i=0;i<p_rfid->n_idcmd;i++,p_ic++){
+			 //= FindUhfidCmd(p_rfid);
 			switch(p_ic->cmd){
 					case  CAR_CMD_RUN:
 						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
@@ -612,8 +657,10 @@ void RunCmdProc(RFID *p_rfid)
 					case 	CAR_CMD_TURN:
 						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
 							TurnCtrl(p_ic);
-						//else
-						//	SetMotorSpd(MOTOR_TURN,0);
+						if(GetUhfidCmdNumber(p_rfid,CAR_CMD_TURN)==0){
+							TurnCtrl(&turn_ic);
+							//SetMotorSpd(MOTOR_TURN,0);
+						}
 						break;
 					case 	CAR_CMD_TILT:
 						if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0)){
@@ -623,25 +670,23 @@ void RunCmdProc(RFID *p_rfid)
 							if(TiltCtrl(&tilt_ic)){
 								if(tilt_ic.type==TYPE_TILT_HALF)
 									tilt_ic.dis=0;
-								if(tilt_ic.type==TYPE_TILT_ONE){
+								else if(tilt_ic.type==TYPE_TILT_ONE){
 									if(tilt_ic.dis==p_ic->dis)
 										tilt_ic.dis=-p_ic->dis;
 									else
 										tilt_ic.dis=0;
 								}
-
+								else if(tilt_ic.type==TYPE_TILT_ALWAYS)
+										tilt_ic.dis=-tilt_ic.dis;
+								
 							}
-							//b_tilt=1;
 						}
-						//else
-							//n_tilt=0;
-						//	SetMotorSpd(MOTOR_TILT,0);
 						break;
 					case 	CAR_CMD_PLAY:
 
 						break;
 			}
-		}
+		}*/
 	}
 	lp_rfid=p_rfid;
 }

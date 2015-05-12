@@ -408,7 +408,9 @@ void UhfidSwitch(INT8U cmd);
 #define RDID_BITS	0xffff
 INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len);
 
-IDCMD *FindUhfidCmd(RFID *p_rfid);
+IDCMD *FindUhfidCmd(RFID *p_rfid,INT8U cmd,int dt);
+IDCMD *FindUhfidNextCmd(RFID *p_rfid,INT8U cmd,int dt);
+INT32U GetUhfidCmdNumber(RFID *p_rfid,INT8U cmd);
 
 void SaveSysSet(void);
 /*·½Ïò¿ØÖÆ*/
