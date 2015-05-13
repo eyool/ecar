@@ -40,6 +40,10 @@ void App_init(void)
 	m_car.cid=m_sysset.cid;//GetAddr();
 	SetAddr(m_car.cid);
 	m_car.status=CAR_STATUS_NULL;
+	SetMotorSpd(MOTOR_RL,0);
+	SetMotorSpd(MOTOR_RR,0);
+	SetMotorSpd(MOTOR_TURN,0);
+	SetMotorSpd(MOTOR_TILT,0);
 	//n_uartTX=0;
 //	p_rfid=NULL;
 	OSTimeDly(2);
@@ -57,19 +61,20 @@ void App_init(void)
 	}
 	
 
-	if(CheckSelf()==0){	
+//	if(CheckSelf()==0){	
 		while(!DowloadCFG()){
 			WifiLink();
 			OSTimeDly(200);			
 		}				
-	}
+//	}
 	//else
 		//m_car.err=SYS_STATUS_INIT_ERR;			
 #endif	
 //	test();
-	m_car.status=CAR_STATUS_INIT;
+
 	UhfidSwitch(UHFID_CMD_OPEN);
 	StartIWDG();
+	m_car.status=CAR_STATUS_CKSELF;		
 }
 //--------------------
 void nopf(void)
@@ -178,10 +183,12 @@ void AppRunProc(void  *p_msg)
 {
 // 	INT32U tmp;
 	if(!p_msg){
-		OSTimeDly(50);
+		OSTimeDly(40);
 		switch(m_car.status){
-			case CAR_STATUS_NULL:
-
+			case CAR_STATUS_CKSELF:
+					sw_power=1;
+					CheckSelf();		
+					m_car.status=CAR_STATUS_INIT;			
 				break;
 			case CAR_STATUS_INIT:
 				if(!m_car.err){
@@ -200,7 +207,7 @@ void AppRunProc(void  *p_msg)
 				}
 				break;
 			case CAR_STATUS_JOIN:
-				sw_power=1;
+
 				OSTimeDly(1000);
 				CloseRunBreak();
 				if(m_car.p_rfid[0]&&m_car.p_rfid[0]->id){
@@ -551,6 +558,11 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					if(rbuf[1]==C_PC_MCMD_IN){
 						m_car.laststatus=m_car.status;
 						m_car.status=CAR_STATUS_WAITCMD;
+						SetMotorSpd(MOTOR_RL,0);
+						SetMotorSpd(MOTOR_RR,0);
+						SetMotorSpd(MOTOR_TURN,0);
+						SetMotorSpd(MOTOR_TILT,0);	
+						CloseAllRelay();
 						if(sn>=3)
 							m_car.p_rfid[0]=(RFID *)(CFGSYS_FLASH_CFG_BODY+*(INT16U *)(CFGSYS_FLASH_CFG_NP+(rbuf[2]<<2)));
 					}
@@ -593,7 +605,7 @@ void RunCmdProc(RFID *p_rfid)
 {
 //	static INT8U n_tilt=0;
 	static IDCMD tilt_ic;
-	static IDCMD const ctilt_ic={0,0,'a',0,20,0};
+	static IDCMD const ctilt_ic={0,0,'a',0,15,0};
 	static IDCMD const turn_ic={0,0,'t',0,30,0};
 //	static const IDCMD run_ic={.tick=0,.cmd='r',.dis=0,.spd=0};
 	static RFID *lp_rfid=0;
@@ -745,9 +757,10 @@ void RunCtrl(IDCMD *p_ic)
 #define ANGLE_MAX     3000
 //#define LMIN_SPD      20
 #define ZERO_SPD      2
+#define NCK_DIR      15
 void TurnCtrl(IDCMD *p_ic)
 {
-  //  static INT32U ltick=0;
+    static INT8S cdir=0;
     int dir=0;
     int sro=p_ic->dis,cro=TURNANGLEMODIFY(m_car.turnangle_np);//m_sensor[0].rotation[0]-m_sensor[0].rotation[1];
     while(cro>=ANGLE_CYCLE) cro-=ANGLE_CYCLE;
@@ -764,14 +777,17 @@ void TurnCtrl(IDCMD *p_ic)
     if (sro>ANGLE_MAX)
         sro=ANGLE_MAX;
 
-
-    if (sro<ANGLE_DT) {
-		OpenTurnBreak();
-		SetMotorSpd(MOTOR_TURN,0);
-		//ltick=OSTimeGet();
-	}
-	else {
-
+		if(TurnDir==dir)//方向实际相反
+			cdir++;
+		else
+			cdir=0;
+    if(sro<ANGLE_DT||cdir>NCK_DIR) {
+			cdir=0;	
+			OpenTurnBreak();
+			SetMotorSpd(MOTOR_TURN,0);
+			//ltick=OSTimeGet();
+		}
+		else {
         /*dspd=((p_ic->spd*sro)/ANGLE_MAX)-m_sensor[0].turnspeed;
         if (dspd>SPD_DT_LMT) 
             dspd=SPD_DT_LMT;
@@ -815,7 +831,7 @@ int TiltCtrl(IDCMD *p_ic)
         SetMotorSpd(MOTOR_TILT,0); 
 		if(p_ic->dis==0)
 			CloseAllRelay();
-		return 1;
+			return 1;
     }
     else{
         if (dir){
@@ -1007,7 +1023,9 @@ void UartSendProc(INT8U n,INT8U chl)
 INT8U CheckSelf(void)
 {
 	INT32S tmp[2],n;//re=0x400;
-	return 0;//debug 取消
+	//return 0;//debug 取消
+	while(m_sensor[0].xv<3000)
+		OSTimeDly(50);
 	//1
 	m_car.err=0xf;
 	tmp[0]=m_sensor[0].r_np[0];
@@ -1058,7 +1076,7 @@ INT8U CheckSelf(void)
 		}
 	}
 	if(tmp[0])
-		m_car.err&=0xb;;
+		m_car.err&=0xb;
 	SetMotorSpd(MOTOR_TURN,0);
 	OSTimeDly(3000);
 	while(m_car.turnangle_np>(ANGLE_DT>>2)){
@@ -1074,9 +1092,9 @@ INT8U CheckSelf(void)
 	SetMotorSpd(MOTOR_TURN,0);
 	//4
 	tmp[0]=m_sensor[0].tilt;
-	n=10;
+	n=20;
 	while(n--){
-		if(tmp[0]>TILT_DT){
+		if(tmp[0]<0){
 			CloseDownRelay();
 			OpenUpRelay();
 		}
@@ -1091,12 +1109,12 @@ INT8U CheckSelf(void)
 			break;
 		}
 	}
-	while(m_sensor[0].tilt>TILT_DT){
+	while(m_sensor[0].tilt<-TILT_DT){
 		CloseDownRelay();
 		OpenUpRelay();
 		OSTimeDly(200);
 	}
-	while(m_sensor[0].tilt<-TILT_DT){
+	while(m_sensor[0].tilt>TILT_DT){
 		CloseUpRelay();
 		OpenDownRelay();
 		OSTimeDly(200);

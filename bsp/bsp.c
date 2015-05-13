@@ -970,6 +970,7 @@ void AdjustMotorBalance(INT32S dps)
 	INT16S r,l;
 	l=TIM_GetCapture3(SPDPWM_TIM);
 	r=TIM_GetCapture4(SPDPWM_TIM);
+	return;	
 	if(l<MAX_BALANCE_START||r<MAX_BALANCE_START)
 		return;
 	dps>>=15;

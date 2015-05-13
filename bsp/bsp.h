@@ -231,8 +231,8 @@ typedef struct _SYSSET{
 #define UHFID_FINDID_ERR  0x00ff01aa
 #define UHFID_FRAME_END   0x8e
 
-#define MOTOR_ZERO_OFF  0x50
-#define MOTOR_TILT_ZERO_OFF  0x28
+#define MOTOR_ZERO_OFF  0x66
+#define MOTOR_TILT_ZERO_OFF  0x20
 //º¯Êý 
 void SetCenter(void);
 

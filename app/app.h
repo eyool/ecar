@@ -107,6 +107,7 @@ typedef struct _CAR{
 #define CAR_STATUS_WAITCMD		3
 #define CAR_STATUS_RUN			4
 #define CAR_STATUS_BACK			5
+#define CAR_STATUS_CKSELF		6
 
 #define CAR_AREA_NULL			0
 #define CAR_AREA_START			1
