@@ -970,6 +970,7 @@ void AdjustMotorBalance(INT32S dps)
 	INT16S r,l;
 	l=TIM_GetCapture3(SPDPWM_TIM);
 	r=TIM_GetCapture4(SPDPWM_TIM);
+	return;	
 	if(l<MAX_BALANCE_START||r<MAX_BALANCE_START)
 		return;
 	dps>>=15;
@@ -1402,14 +1403,43 @@ INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len)
 	}
 	return 0;
 }
-IDCMD *FindUhfidCmd(RFID *p_rfid)
+IDCMD *FindUhfidCmd(RFID *p_rfid,INT8U cmd,int dt)
 {
-	static INT8U n_cmd=0;
+	int i=0;
+	IDCMD *	p_ic=&p_rfid->p_idcmd;
+	for(;i<p_rfid->n_idcmd;i++,p_ic++){
+		if(p_ic->cmd==cmd)
+			if(dt>p_ic->tick*100&&(dt<(p_ic->tick+p_ic->runtime)*100||p_ic->runtime==0))
+				return p_ic;
+	}
+	return 0;
+/*	static INT8U n_cmd=0;
 	IDCMD *	p_ic=&p_rfid->p_idcmd;
 	p_ic+=n_cmd;
 	if(p_rfid->n_idcmd<=++n_cmd)
 		n_cmd=0;
-	return p_ic;
+	return p_ic;*/
+}
+IDCMD *FindUhfidNextCmd(RFID *p_rfid,INT8U cmd,int dt)
+{
+	int i=0;
+	IDCMD *	p_ic=&p_rfid->p_idcmd;
+	for(;i<p_rfid->n_idcmd;i++,p_ic++){
+		if(p_ic->cmd==cmd)
+			if(dt<=p_ic->tick*100)
+				return p_ic;
+	}
+	return 0;
+}
+INT32U GetUhfidCmdNumber(RFID *p_rfid,INT8U cmd)
+{
+	INT32U i=0,n=0;
+	IDCMD *	p_ic=&p_rfid->p_idcmd;
+	for(;i<p_rfid->n_idcmd;i++){
+		if(p_ic[i].cmd==cmd)
+			n++;
+	}
+	return n;
 }
 void SaveSysSet(void)
 {

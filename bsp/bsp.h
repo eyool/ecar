@@ -231,8 +231,8 @@ typedef struct _SYSSET{
 #define UHFID_FINDID_ERR  0x00ff01aa
 #define UHFID_FRAME_END   0x8e
 
-#define MOTOR_ZERO_OFF  0x50
-#define MOTOR_TILT_ZERO_OFF  0x28
+#define MOTOR_ZERO_OFF  0x66
+#define MOTOR_TILT_ZERO_OFF  0x20
 //函数 
 void SetCenter(void);
 
@@ -408,7 +408,9 @@ void UhfidSwitch(INT8U cmd);
 #define RDID_BITS	0xffff
 INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len);
 
-IDCMD *FindUhfidCmd(RFID *p_rfid);
+IDCMD *FindUhfidCmd(RFID *p_rfid,INT8U cmd,int dt);
+IDCMD *FindUhfidNextCmd(RFID *p_rfid,INT8U cmd,int dt);
+INT32U GetUhfidCmdNumber(RFID *p_rfid,INT8U cmd);
 
 void SaveSysSet(void);
 /*方向控制*/

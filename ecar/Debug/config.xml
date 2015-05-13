@@ -2,12 +2,18 @@
 <root>
 	<hid>
 		<id1 pos="0" id="1" area="1" safedis="1000"><cmd1 dis="1000" cmd="r" spd="70"></cmd1></id1>
-		<id2 pos="100" id="100" area="1" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id2>
+		<id2 pos="100" id="100" area="1" safedis="1000">
+			<cmd1 spd="0" dis="1000" cmd="r" runtime="50"></cmd1>
+			<cmd2 dis="10000" spd="75" tick="70" cmd="r" runtime="100"/>
+		</id2>
 		<id3 pos="200" id="200" area="1" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id3>
 		<id4 pos="300" id="300" area="1" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id4>
 		<id5 pos="400" id="400" area="1" safedis="1000"><cmd1 spd="50" dis="1000" cmd="r"></cmd1></id5>
 		<id6 pos="500" id="500" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id6>
-		<id7 pos="600" id="600" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1><cmd2 dis="800" spd="80" tick="30" cmd="t" runtime="200"/><cmd4 tick="230" runtime="20" cmd="p"></cmd4><cmd5 dis="0" spd="55" tick="270" cmd="t" runtime="200"/></id7>
+		<id7 pos="600" id="600" area="2" safedis="1000">
+			<cmd1 dis="800" spd="80" tick="30" cmd="t" runtime="200"/>
+			<cmd2 dis="0" spd="55" tick="270" cmd="t" runtime="200"/>
+		</id7>
 		<id8 pos="700" id="700" area="2" safedis="1000"><cmd1 spd="60" dis="1000" cmd="r"></cmd1></id8>
 		<id9 pos="800" id="800" area="2" safedis="1000"><cmd1 spd="30" dis="1000" cmd="r"></cmd1></id9>
 		<id10 pos="900" id="900" area="2" safedis="1000"><cmd1 spd="10" dis="1000" cmd="r"></cmd1></id10>
@@ -15,7 +21,13 @@
 		<id12 pos="1200" id="1200" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id12>
 		<id13 pos="1400" id="1400" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id13>
 		<id14 pos="1600" id="1600" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id14>
-		<id15 pos="1800" id="1800" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1><cmd3 dis="500" spd="75" tick="30" cmd="a" runtime="100" type="1"/><cmd3 dis="0" spd="75" tick="180" cmd="a" runtime="200" type="1"/></id15>
+		<id15 pos="1800" id="1800" area="2" safedis="1000">
+			<cmd1 dis="50" spd="75" tick="0" cmd="a" runtime="50" type="0"/>
+			<cmd2 dis="0" spd="75" tick="50" cmd="a" runtime="50" type="0"/>
+			<cmd1 dis="50" spd="75" tick="100" cmd="a" runtime="100" type="1"/>
+			<cmd2 dis="50" spd="75" tick="200" cmd="a" runtime="100" type="2"/>
+			<cmd2 dis="50" spd="100" tick="300" cmd="a" runtime="0" type="3"/>
+		</id15>
 		<id16 pos="2000" id="2000" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id16>
 		<id17 pos="2100" id="2100" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id17>
 		<id18 pos="2200" id="2200" area="2" safedis="1000"><cmd1 spd="60" dis="1000" cmd="r"></cmd1></id18>
@@ -36,7 +48,7 @@
 		<id33 pos="4200" id="4200" area="2" safedis="1000"><cmd1 spd="100" dis="1000" cmd="r"></cmd1></id33>
 		<id34 pos="4300" id="4300" area="3" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id34>
 		<id35 pos="4400" id="4400" area="3" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id35>
-		<id36 pos="4500" id="4500" area="3" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id36>
+		<id36 pos="4500" id="4500" area="3" safedis="1000"><cmd1 spd="50" dis="1000" cmd="r"></cmd1></id36>
 		<id37 pos="4600" id="4600" area="3" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id37>
 		<id38 pos="4700" id="4700" area="4" safedis="1000"><cmd1 spd="10" dis="1000" cmd="r"></cmd1></id38>
 		<id39 pos="4800" id="4800" area="4" safedis="1000"><cmd1 spd="10" dis="1000" cmd="r"></cmd1></id39>
