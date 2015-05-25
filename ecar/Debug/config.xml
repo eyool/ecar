@@ -64,5 +64,5 @@
 		<id49 pos="5900" id="5900" area="6" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id49>
 		<id50 pos="6000" id="6000" area="6" safedis="1000"><cmd1 spd="0" dis="1000" cmd="r"></cmd1></id50>
 	</hid>
-	<softcfg carnumber="10" traillen="6700" combaudrate="115200" comport="3"/>
+	<softcfg carnumber="10" traillen="6700" combaudrate="115200" comport="12"/>
 </root>

@@ -13,6 +13,7 @@ INT32U G_msg[2];
 INT8U b_debug=0,sw_power=0;
 SENSOR m_sensor[2];//0,当前，1，保留上次
 INT32U lastsendtime=0;
+INT16U datalinktime = 0;
 IDCMD m_icmd;
 
 //RFID *p_rfid;
@@ -93,17 +94,25 @@ void MSDelay(UINT ms)//参数：ms
           lasttick=ct;*/
 //-------------------
 //主任务函数1/4
+#define DATALINKTIME	500
 void MainTaskProc(void *p_msg)
 {
+	static UINT lt=0;
 	UINT ct=OSTimeGet();  
 	if(p_msg==0){
 		SW_Power();
-		if ((ct&0xfff)==0)
+		if (ct-lt>4000){
 			UhfidSwitch(UHFID_CMD_OPEN);
+			lt=ct;
+		}
 		//----------------------------
 		if(!b_debug)
 			WifiLink();//让wifi断线从新连接
 		ZigbeeLink();//zigbee断线从新连接
+		if (datalinktime++ > DATALINKTIME){
+			AdjustMotorSpd(MOTOR_RL, -10, 30);
+			AdjustMotorSpd(MOTOR_RR, -10, 30);
+		}
 		OSTimeDly(20);	
 	}
 	else
@@ -250,6 +259,18 @@ void AppRunProc(void  *p_msg)
 						RunCmdProc(m_car.p_rfid[0]);
 					}
 				}
+				else{
+					SetMotorSpd(MOTOR_TURN, 0);
+					SetMotorSpd(MOTOR_RL, 0);
+					SetMotorSpd(MOTOR_RR, 0);
+					SetMotorSpd(MOTOR_TILT, 0);
+					CloseAllRelay();
+//					sw_power = 0;
+				}
+				break;
+			case CAR_STATUS_GETIN:
+				if (CarGetIn(m_car.p_rfid[0]))
+					m_car.status = CAR_STATUS_RUN;
 				break;
 		}
 	}
@@ -340,14 +361,21 @@ void SensorProc(void)
 						//NetSend(2,NET_CHL_ALL);//heart
 					}
 	//碰撞检测
-#define SAFE_DIS	300
+#define SAFE_DIS	320
 		m_car.frontsafedis=m_car.frontsafedis*7+GetFrontSafeDis()>>3;
 		TrigUS();
 		if(m_car.frontsafedis<SAFE_DIS){
-			AdjustMotorSpd(MOTOR_RL,0,m_car.frontsafedis>>3);
-			AdjustMotorSpd(MOTOR_RR,0,m_car.frontsafedis>>3);
-		//	OpenRunBreak();
+			//if(m_car.frontsafedis>(SAFE_DIS>>2)){			
+				AdjustMotorSpd(MOTOR_RL,-1,m_car.frontsafedis>>4);
+				AdjustMotorSpd(MOTOR_RR,-1,m_car.frontsafedis>>4);
+			//}
+		//	else{
+		//		SetMotorSpd(MOTOR_RR,0);
+		//		SetMotorSpd(MOTOR_RL,0);
+			  //OpenRunBreak();			
+		//	}
 		}
+	
 		//else
 			//CloseRunBreak();
 /*#define N_CKUS	10
@@ -443,6 +471,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 	INT8U sp=0,sn;
 	INT8U *rbuf;
 	int i;
+	datalinktime = 0;
 	sn=GetCmd(buf,&rbuf,&sp,len);
 	while(sn){
 		switch(*rbuf){
@@ -589,6 +618,10 @@ void NetCmdProc(INT8U *buf,INT8U len)
 					SaveSysSet();
 				}
 				break;
+			case C_PC_DISPATCH:
+				if (rbuf[1] == C_PC_DISPATCH_GETIN&&m_car.p_rfid[0]&&m_car.p_rfid[0]->area == CAR_AREA_GETON)
+					m_car.status = CAR_STATUS_GETIN;
+				break;
 			case C_PC_SYSRST:
 				if(*(INT32U *)(rbuf+2)==PROGRAMM_KEY&&rbuf[1]==m_car.cid)//GetAddr()
 					NVIC_SystemReset();
@@ -634,25 +667,30 @@ void RunCmdProc(RFID *p_rfid)
 		//tilt
 		p_ic=FindUhfidCmd(p_rfid,CAR_CMD_TILT,dt);
 		if(p_ic){
-			if(lp_rfid!=p_rfid||tilt_ic.tick!=p_ic->tick)
-				memcpy((INT8U *)&tilt_ic,(INT8U *)p_ic,sizeof(IDCMD));
+//			if((p_rfid[0]->area==CAR_AREA_PLAY){
+				if(lp_rfid!=p_rfid||tilt_ic.tick!=p_ic->tick)
+					memcpy((INT8U *)&tilt_ic,(INT8U *)p_ic,sizeof(IDCMD));
 
-			if(TiltCtrl(&tilt_ic)){
-				if(tilt_ic.type==TYPE_TILT_HALF)
-					tilt_ic.dis=0;
-				else if(tilt_ic.type==TYPE_TILT_ONE){
-					if(tilt_ic.dis==p_ic->dis)
-						tilt_ic.dis=-p_ic->dis;
-					else
+				if(TiltCtrl(&tilt_ic)){
+					if(tilt_ic.type==TYPE_TILT_HALF)
 						tilt_ic.dis=0;
+					else if(tilt_ic.type==TYPE_TILT_ONE){
+						if(tilt_ic.dis==p_ic->dis)
+							tilt_ic.dis=-p_ic->dis;
+						else
+							tilt_ic.dis=0;
+					}
+					else if(tilt_ic.type==TYPE_TILT_ALWAYS)
+						tilt_ic.dis=-tilt_ic.dis;
 				}
-				else if(tilt_ic.type==TYPE_TILT_ALWAYS)
-					tilt_ic.dis=-tilt_ic.dis;
-
-			}
+	//		}
+//			else if(p_rfid[0]->area==CAR_AREA_STOP)
+//					TiltCtrl((IDCMD *)&ctilt_ic);
 		}
-		else if(FindUhfidNextCmd(p_rfid,CAR_CMD_TILT,dt)==0)
-			TiltCtrl((IDCMD *)&ctilt_ic);
+		else if(FindUhfidNextCmd(p_rfid,CAR_CMD_TILT,dt)==0){
+			if(p_rfid->area!=CAR_AREA_BACK)
+				TiltCtrl((IDCMD *)&ctilt_ic);
+		}
 		
 		/*
 		for (i=0;i<p_rfid->n_idcmd;i++,p_ic++){
@@ -724,12 +762,14 @@ void RunCtrl(IDCMD *p_ic)
     if (dspd<-SPD_DT_LMT) 
         dspd=-SPD_DT_LMT;*/
 	if(m_car.p_rfid[0]&&GetFrontDis()<m_car.p_rfid[0]->safedis){
-	//		dspd=-SPD_DT_LMT;
-			AdjustMotorSpd(MOTOR_RL,-5,p_ic->spd);
-			AdjustMotorSpd(MOTOR_RR,-5,p_ic->spd);			
-			return;
-		}
-	
+		AdjustMotorSpd(MOTOR_RL,-2,p_ic->spd);
+		AdjustMotorSpd(MOTOR_RR,-2,p_ic->spd);			
+	}
+	else{
+		AdjustMotorSpd(MOTOR_RL, 1, p_ic->spd);
+		AdjustMotorSpd(MOTOR_RR, 1, p_ic->spd);
+		AdjustMotorBalance(m_sensor[0].ps);
+	}
 	/*	if(dt>=0)
 			dspd+=(dt&0x3f);
 		else
@@ -746,11 +786,6 @@ void RunCtrl(IDCMD *p_ic)
 			sspd++;
 		else if(dspd<0)
 			sspd--;*/
-		
-    AdjustMotorSpd(MOTOR_RL,1,p_ic->spd);
-    AdjustMotorSpd(MOTOR_RR,1,p_ic->spd);
-    AdjustMotorBalance(m_sensor[0].ps);
-		
 }
 #define ANGLE_CYCLE   3600
 #define ANGLE_DT      20
@@ -815,11 +850,11 @@ void TurnCtrl(IDCMD *p_ic)
 }
 #define TILT_MAX    100
 #define TILT_DT    10
+#define ACT_TIMLONG	8000
 int TiltCtrl(IDCMD *p_ic)
 {
     int dir=0;
     int stilt=p_ic->dis-(m_sensor[0].tilt+m_sensor[1].tilt>>1);
-
     if (stilt>0) 
         dir=1;
     else   
@@ -827,11 +862,11 @@ int TiltCtrl(IDCMD *p_ic)
     if (stilt>TILT_MAX) 
         stilt=TILT_MAX;
 
-    if (stilt<TILT_DT) {
+	if (stilt<TILT_DT ||GetRelayStatus()) {//
         SetMotorSpd(MOTOR_TILT,0); 
-		if(p_ic->dis==0)
+	//	if(p_ic->dis==0)
 			CloseAllRelay();
-			return 1;
+		return 1;
     }
     else{
         if (dir){
@@ -1124,4 +1159,31 @@ INT8U CheckSelf(void)
 	//
 
 	return m_car.err;
+}
+INT32U CarGetIn(RFID *p_rfid)
+{
+	static INT16U rfid = 0;
+	IDCMD *p_ic;
+	if (p_rfid == 0)
+		return 0;
+	if (!sw_power){
+		sw_power = 1;
+		OSTimeDly(500);
+	}
+	if (rfid == 0)
+		rfid = p_rfid->id;
+	if (rfid == p_rfid->id){
+		p_ic = FindUhfidCmd(p_rfid, CAR_CMD_RUN, OSTimeGet() - m_car.l_tick);
+		if (p_ic)
+				RunCtrl(p_ic);
+		
+	}
+	else{
+				SetMotorSpd(MOTOR_RL, 0);
+				SetMotorSpd(MOTOR_RR, 0);
+//				sw_power = 0;
+				rfid = 0;
+				return 1;
+	}
+	return 0;
 }

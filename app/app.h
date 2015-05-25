@@ -34,6 +34,7 @@ typedef struct _CAR{
 	INT32S turnangle_np;
 	INT8U allcarid[CAR_MAX];
 	INT32U allcarpos[CAR_MAX];
+	//INT8U allcararea[CAR_MAX];
 //	INT16S st_angle,st_turn,st_run;
 	RFID *p_rfid[2];/*保存2次卡ID*/ 
 	INT16U spd,frontsafedis;//,rfid;
@@ -78,11 +79,13 @@ typedef struct _CAR{
 #define C_PC_SENSOR			11
 #define C_PC_MCMD			12/*手动控制*/
 #define C_PC_SETADDR        13
+#define C_PC_DISPATCH		14
 
 #define C_PC_MCMD_IN			0x80
 #define C_PC_MCMD_OUT			0x81
 #define C_PC_MCMD_RUN			0x82
 
+#define C_PC_DISPATCH_GETIN		0x90
 
 #define C_PC_SYSERR        0xfc
 #define C_PC_SYSRST        0xfd
@@ -108,6 +111,7 @@ typedef struct _CAR{
 #define CAR_STATUS_RUN			4
 #define CAR_STATUS_BACK			5
 #define CAR_STATUS_CKSELF		6
+#define CAR_STATUS_GETIN		7/*進站*/
 
 #define CAR_AREA_NULL			0
 #define CAR_AREA_START			1
@@ -147,5 +151,6 @@ void ReportPos(void);
 void MCmdProc(void);
 void TrigUS(void);
 void UartSendProc(INT8U n,INT8U chl);
+INT32U CarGetIn(RFID *p_rfid);
 
 #endif

@@ -982,8 +982,12 @@ void AdjustMotorBalance(INT32S dps)
 	r-=dps;
 	if(l<MOTOR_ZERO_OFF)
 		l=MOTOR_ZERO_OFF;
+	if (l>SPDPWM_CLK / SPDPWM_FREQ)
+		l = SPDPWM_CLK / SPDPWM_FREQ;
 	if(r<MOTOR_ZERO_OFF)
 		r=MOTOR_ZERO_OFF;
+	if (r>SPDPWM_CLK / SPDPWM_FREQ)
+		r = SPDPWM_CLK / SPDPWM_FREQ;
 	TIM_SetCompare3(SPDPWM_TIM,l);
 	TIM_SetCompare4(SPDPWM_TIM,r);
 }
@@ -1001,7 +1005,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 
 	switch(chl){
 	case MOTOR_TURN:	
-		sspd=sspd*3>>2;
+		//sspd=sspd*3>>2;
 		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture1(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
@@ -1018,7 +1022,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
 	case MOTOR_RL:	
-		sspd=sspd*3>>2;
+		//sspd=sspd*3>>2;
 		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture3(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
@@ -1030,7 +1034,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 			CloseRunBreak();
 		break;
 	case MOTOR_RR:	
-		sspd=sspd*3>>2;
+		//sspd=sspd*3>>2;
 		sspd=MOTOR_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture4(SPDPWM_TIM)+dspd;
 		if(ss>0&&ss<MOTOR_ZERO_OFF)
@@ -1501,4 +1505,28 @@ void StartIWDG(void)
 
   /* Enable IWDG (the LSI oscillator will be enabled by hardware) */
   IWDG_Enable();
+}
+INT8U GetRelayStatus(void)
+{
+//#define OpenUpRelay() 		GPIO_SetBits(GPIOC,GPIO_Pin_4)/*打开上升液压电磁阀*/
+//#define OpenDownRelay() 	GPIO_SetBits(GPIOC,GPIO_Pin_5)/*打开下降液压电磁阀*/
+//#define CloseUpRelay() 		GPIO_ResetBits(GPIOC,GPIO_Pin_4)
+//#define CloseDownRelay() 	GPIO_ResetBits(GPIOC,GPIO_Pin_5)
+	GPIO_InitTypeDef GPIO_InitStructure;
+	INT8U re = GPIO_ReadInputData(GPIOC)>>4;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_InitStructure.GPIO_Pin =	0;
+	GPIO_InitStructure.GPIO_Mode=GPIO_Mode_IPU;	
+	if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_4))
+		GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
+	if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_5))
+		GPIO_InitStructure.GPIO_Pin |= GPIO_Pin_5;
+	if(GPIO_InitStructure.GPIO_Pin){
+		 GPIO_Init(GPIOC, &GPIO_InitStructure); 
+		 OSTimeDly(1);
+		 re=re^(GPIO_ReadInputData(GPIOC)>>4);
+		 GPIO_InitStructure.GPIO_Mode=GPIO_Mode_Out_PP;	
+		 GPIO_Init(GPIOC, &GPIO_InitStructure); 		
+	}
+	return re&3;
 }

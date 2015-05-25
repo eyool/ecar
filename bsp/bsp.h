@@ -407,9 +407,11 @@ void UhfidSwitch(INT8U cmd);
 //得到卡数据
 #define RDID_BITS	0xffff
 INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len);
-
+/*查找卡命令*/
 IDCMD *FindUhfidCmd(RFID *p_rfid,INT8U cmd,int dt);
+/*查找對應的下條命令*/
 IDCMD *FindUhfidNextCmd(RFID *p_rfid,INT8U cmd,int dt);
+/*查找命令數目*/
 INT32U GetUhfidCmdNumber(RFID *p_rfid,INT8U cmd);
 
 void SaveSysSet(void);
@@ -424,5 +426,7 @@ void AdjustMotorBalance(INT32S dps);
 void CalcUS(void);
 //得到距离
 INT16U GetFrontSafeDis(void);
+//查看對於電磁閥的打開狀態
+INT8U GetRelayStatus(void);
 //api end
 #endif
