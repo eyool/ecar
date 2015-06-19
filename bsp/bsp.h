@@ -79,8 +79,8 @@ typedef struct _SYSSET{
 #define	UHFID_IRQn 			 	 USART3_IRQn
 #define UHFID_DMA_TX_Channel		 DMA1_Channel2
 #define UHFID_DMA_RX_Channel		 DMA1_Channel3
-#define UHFID_DMA_TX_BUFSIZE		 256
-#define UHFID_DMA_RX_BUFSIZE		 256
+#define UHFID_DMA_TX_BUFSIZE		 256 /*256*/
+#define UHFID_DMA_RX_BUFSIZE		 256 /*256*/
 
 #define UART_CHL_ZIGBEE		0
 #define UART_CHL_WIFI			1
