@@ -211,7 +211,8 @@ void AppRunProc(void  *p_msg)
 					Systbuf[0]=C_PC_SYSERR;
 					Systbuf[1]=m_car.status;
 					Systbuf[2]=m_car.err;
-					NetSend(3,NET_CHL_ALL);//INIT
+					Get_SerialNum((INT32U *)(Systbuf+3));//12??
+					NetSend(15,NET_CHL_ALL);//INIT
 					OSTimeDly(1000);
 				}
 				break;
@@ -1059,10 +1060,15 @@ INT8U CheckSelf(void)
 {
 	INT32S tmp[2],n;//re=0x400;
 	//return 0;//debug 取消
-	while(m_sensor[0].xv<3000)
+	//电压 轮子 转台 选择中心 倾斜
+	m_car.err=0x1f;	
+	n=10;
+	while(--n&&m_sensor[0].xv<3000)
 		OSTimeDly(50);
+	if(n)
+		m_car.err&=0xef;	
 	//1
-	m_car.err=0xf;
+
 	tmp[0]=m_sensor[0].r_np[0];
 	tmp[1]=m_sensor[0].r_np[1];
 	n=10;
@@ -1071,7 +1077,7 @@ INT8U CheckSelf(void)
 		AdjustMotorSpd(MOTOR_RR,2,20);
 		OSTimeDly(100);
 		if(m_sensor[0].r_np[0]>tmp[0]+2&&m_sensor[0].r_np[1]>tmp[1]+2){
-			m_car.err&=0xe;
+			m_car.err&=0xfe;
 			break;
 		}
 	}
@@ -1085,12 +1091,13 @@ INT8U CheckSelf(void)
 		AdjustMotorSpd(MOTOR_TURN,2,20);
 		OSTimeDly(100);
 		if(m_sensor[0].t_np>tmp[0]+2||m_sensor[0].t_np+2<tmp[0]){
-			m_car.err&=0xd;
+			m_car.err&=0xfd;
 			break;
 		}
 	}
 	tmp[0]=0;
-	while(TURNANGLEMODIFY(m_car.turnangle_np)<CHECK_TA){
+	n=100;
+	while(--n&&TURNANGLEMODIFY(m_car.turnangle_np)<CHECK_TA){
 		if(m_sensor[0].b_hall|B_HALL_C){
 			tmp[0]++;
 			break;
@@ -1101,7 +1108,8 @@ INT8U CheckSelf(void)
 		SetMotorSpd(MOTOR_TURN,0);
 		OSTimeDly(3000);
 		TurnRight();
-		while(TURNANGLEMODIFY(m_car.turnangle_np)>-CHECK_TA){
+		n=100;
+		while(--n&&TURNANGLEMODIFY(m_car.turnangle_np)>-CHECK_TA){
 			AdjustMotorSpd(MOTOR_TURN,2,20);
 			if(m_sensor[0].b_hall|B_HALL_C){
 				tmp[0]++;
@@ -1111,15 +1119,17 @@ INT8U CheckSelf(void)
 		}
 	}
 	if(tmp[0])
-		m_car.err&=0xb;
+		m_car.err&=0xfb;
 	SetMotorSpd(MOTOR_TURN,0);
 	OSTimeDly(3000);
-	while(m_car.turnangle_np>(ANGLE_DT>>2)){
+	n=100;
+	while(--n&&m_car.turnangle_np>(ANGLE_DT>>2)){
 		TurnRight();
 		AdjustMotorSpd(MOTOR_TURN,2,10);
 		OSTimeDly(100);
 	}
-	while(m_car.turnangle_np<-(ANGLE_DT>>2)){
+	n=100;
+	while(--n&&m_car.turnangle_np<-(ANGLE_DT>>2)){
 		TurnLeft();
 		AdjustMotorSpd(MOTOR_TURN,2,10);
 		OSTimeDly(100);
@@ -1140,16 +1150,18 @@ INT8U CheckSelf(void)
 		AdjustMotorSpd(MOTOR_TILT,2,20);
 		OSTimeDly(100);
 		if(m_sensor[0].tilt>tmp[0]+(TILT_DT<<1)||tmp[0]>m_sensor[0].tilt+(TILT_DT<<1)){
-			m_car.err&=0x7;
+			m_car.err&=0xf7;
 			break;
 		}
 	}
-	while(m_sensor[0].tilt<-TILT_DT){
+	n=15;
+	while(--n&&m_sensor[0].tilt<-TILT_DT){
 		CloseDownRelay();
 		OpenUpRelay();
 		OSTimeDly(200);
 	}
-	while(m_sensor[0].tilt>TILT_DT){
+	n=15;
+	while(--n&&m_sensor[0].tilt>TILT_DT){
 		CloseUpRelay();
 		OpenDownRelay();
 		OSTimeDly(200);
