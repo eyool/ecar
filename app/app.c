@@ -294,9 +294,9 @@ void SensorProc(void)
 	memcpy((void *)&m_sensor[1],(void *)&m_sensor[0],sizeof(SENSOR));
 	//得到霍尔 ，加速度，压力传感器
 	ADXL_GetData((INT8U *)buf,6);
-	abuf[0]=((int)abuf[0]*31>>5)+buf[0];
-	abuf[1]=((int)abuf[1]*31>>5)+buf[1];
-	p_sensor->tilt=GetArc(abuf[0]-(p_ss->g_offx<<5),abuf[1]-(0x100-p_ss->g_offy<<5));	
+	abuf[0]=((int)abuf[0]*63>>6)+buf[0];
+	abuf[1]=((int)abuf[1]*63>>6)+buf[1];
+	p_sensor->tilt=GetArc(abuf[0]-(p_ss->g_offx<<6),abuf[1]-(0x100-p_ss->g_offy<<6));	
 	HMC_GetData((INT8U *)(buf+3),12);
 	hbuf[0]=((int)hbuf[0]*7>>3)+buf[3];
 	hbuf[1]=((int)hbuf[1]*7>>3)+buf[5];	
@@ -305,8 +305,8 @@ void SensorProc(void)
 	hbuf[3]=((int)hbuf[3]*7>>3)+buf[8];		
 	p_sensor->rotation[1]=GetArc(hbuf[2],hbuf[3]);	
 	//------------更新偏移量
-	m_sysset.g_offx=abuf[0]>>5;
-	m_sysset.g_offy=abuf[1]>>5;
+	m_sysset.g_offx=abuf[0]>>6;
+	m_sysset.g_offy=abuf[1]>>6;
 	m_sysset.hmc_off=p_sensor->rotation[0]-p_sensor->rotation[1];
 	if(m_sysset.hmc_off>=1800)
 		m_sysset.hmc_off-=3600;
@@ -639,7 +639,7 @@ void RunCmdProc(RFID *p_rfid)
 {
 //	static INT8U n_tilt=0;
 	static IDCMD tilt_ic;
-	static IDCMD const ctilt_ic={0,0,'a',0,15,0};
+	static IDCMD const ctilt_ic={0,0,'a',0,10,0};
 	static IDCMD const turn_ic={0,0,'t',0,30,0};
 //	static const IDCMD run_ic={.tick=0,.cmd='r',.dis=0,.spd=0};
 	static RFID *lp_rfid=0;
@@ -863,11 +863,11 @@ int TiltCtrl(IDCMD *p_ic)
     if (stilt>TILT_MAX) 
         stilt=TILT_MAX;
 
-	if (stilt<TILT_DT ||GetRelayStatus()) {//
-        SetMotorSpd(MOTOR_TILT,0); 
-	//	if(p_ic->dis==0)
+	if (stilt<TILT_DT ||GetRelayStatus()) {
+      SetMotorSpd(MOTOR_TILT,0); 
+			OSTimeDly(200);	
 			CloseAllRelay();
-		return 1;
+			return 1;
     }
     else{
         if (dir){
@@ -883,9 +883,9 @@ int TiltCtrl(IDCMD *p_ic)
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;*/
 		if(stilt<(TILT_DT<<2))
-			AdjustMotorSpd(MOTOR_TILT,2,p_ic->spd>(stilt<<1)?(stilt<<1):p_ic->spd);
+			AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd>(stilt<<1)?(stilt<<1):p_ic->spd);
 		else
-			AdjustMotorSpd(MOTOR_TILT,2,p_ic->spd);
+			AdjustMotorSpd(MOTOR_TILT,1,p_ic->spd);
 		return 0;
     }
 }
@@ -1098,17 +1098,17 @@ INT8U CheckSelf(void)
 	tmp[0]=0;
 	n=500;
 	while(--n&&TURNANGLEMODIFY(m_car.turnangle_np)<CHECK_TA){
-		if(m_sensor[0].b_hall|B_HALL_C){
+		if(m_sensor[0].b_hall&B_HALL_C){
 			tmp[0]++;
 			break;
 		}
 		OSTimeDly(8);
-		if(m_sensor[0].b_hall|B_HALL_C){
+		if(m_sensor[0].b_hall&B_HALL_C){
 			tmp[0]++;
 			break;
 		}
 		OSTimeDly(8);
-		if(m_sensor[0].b_hall|B_HALL_C){
+		if(m_sensor[0].b_hall&B_HALL_C){
 			tmp[0]++;
 			break;
 		}
@@ -1120,18 +1120,18 @@ INT8U CheckSelf(void)
 		TurnRight();
 		n=500;
 		while(--n&&TURNANGLEMODIFY(m_car.turnangle_np)>-CHECK_TA){
-			AdjustMotorSpd(MOTOR_TURN,2,20);
-			if(m_sensor[0].b_hall|B_HALL_C){
+			AdjustMotorSpd(MOTOR_TURN,1,13);
+			if(m_sensor[0].b_hall&B_HALL_C){
 				tmp[0]++;
 				break;
 			}
 			OSTimeDly(8);
-			if(m_sensor[0].b_hall|B_HALL_C){
+			if(m_sensor[0].b_hall&B_HALL_C){
 				tmp[0]++;
 				break;
 			}
 			OSTimeDly(8);
-			if(m_sensor[0].b_hall|B_HALL_C){
+			if(m_sensor[0].b_hall&B_HALL_C){
 				tmp[0]++;
 				break;
 			}
@@ -1167,7 +1167,7 @@ INT8U CheckSelf(void)
 			CloseUpRelay();
 			OpenDownRelay();
 		}
-		AdjustMotorSpd(MOTOR_TILT,2,20);
+		AdjustMotorSpd(MOTOR_TILT,2,13);
 		OSTimeDly(100);
 		if(m_sensor[0].tilt>tmp[0]+(TILT_DT<<1)||tmp[0]>m_sensor[0].tilt+(TILT_DT<<1)){
 			m_car.err&=0xf7;
@@ -1186,8 +1186,10 @@ INT8U CheckSelf(void)
 		OpenDownRelay();
 		OSTimeDly(200);
 	}
-	CloseAllRelay();
 	SetMotorSpd(MOTOR_TILT,0);	
+	OSTimeDly(1000);		
+	CloseAllRelay();
+
 	//
 
 	return m_car.err;

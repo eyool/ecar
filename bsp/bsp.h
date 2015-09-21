@@ -232,7 +232,7 @@ typedef struct _SYSSET{
 #define UHFID_FRAME_END   0x8e
 
 #define MOTOR_ZERO_OFF  0x66
-#define MOTOR_TILT_ZERO_OFF  0x20
+#define MOTOR_TILT_ZERO_OFF  0x18
 //函数 
 void SetCenter(void);
 
