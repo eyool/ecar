@@ -12,7 +12,7 @@
 
 
 typedef struct _IDCMD{
-	INT16S dis,tick;	/*tick��λ��0.1��*/
+	INT16S dis,tick;	/*tick单位是0.1秒*/
 	INT8U cmd,type,spd,runtime;
 }IDCMD;
 typedef struct _RFID{
@@ -146,7 +146,7 @@ typedef struct _SYSSET{
 #define HMC_IRC 	0x0C  /*Identification Register C  	r	 */
 #define HMC_TPOUTM 	0x31  /*Temperature Output MSB Register r	*/
 #define HMC_TPOUTL 	0x32  /*Temperature Output LSB Register r	 */
-//�ٶȲ���
+//速度捕获
 #define SPDCAP_FREQ				8000
 #define SPDCAP_TIM				TIM4
 #define SPDCAP_RCC_APB1			RCC_APB1Periph_TIM4
@@ -164,7 +164,7 @@ typedef struct _SYSSET{
 
 #define SPDCAP_IRQn				TIM4_IRQn
 
-//pwm�ٶ����
+//pwm速度输出
 #define SPDPWM_CLK				12000000	
 #define SPDPWM_FREQ				50000
 #define SPDPWM_TIM				TIM3
@@ -191,7 +191,7 @@ typedef struct _SYSSET{
 #define	ADC_PORT                GPIOC
 #define	ADC_XV_PIN	            GPIO_Pin_0
 #define	ADC_XV_CHL	            ADC_Channel_10
-//ѹ��������
+//压力传感器
 #define	PS_APB2           			 RCC_APB2Periph_GPIOC
 #define PS_PORT                  GPIOC
 #define PS_POUT_PIN              GPIO_Pin_11
@@ -233,7 +233,7 @@ typedef struct _SYSSET{
 
 #define MOTOR_ZERO_OFF  0x66
 #define MOTOR_TILT_ZERO_OFF  0x20
-//���� 
+//函数 
 void SetCenter(void);
 
 
@@ -245,7 +245,7 @@ void SpdCap_init(void);
 void SpdPwm_init(void);
 void ADCInit(void);
 
-// �жϷ������
+// 中断服务程序
 void Wifi_Istr(void);
 void Zigbee_Istr(void);
 void Uhfid_Istr(void);
@@ -278,14 +278,14 @@ void PS_init(void);
 #define KEY_JOIN		2
 #define KEY_REV			4
 /*******************************************
-*Wifi ����Զ�̷����� Ĭ��192.168.100.3
+*Wifi 设置远程服务器 默认192.168.100.3
 *******************************************/
 void Wifi_SetReSrv(void);
-//����WIFI�������ӵ�ϵͳʱ��
+//设置WIFI本次连接的系统时间
 void SetWifiLinkTime(void);
-//����zigbee�������ӵ�ϵͳʱ��
+//设置zigbee本次连接的系统时间
 void SetZigbeeLinkTime(void);
-//����ϵͳ�������������
+//以上系统函数，无须调用
 INT8U GetCmd(INT8U *buf,INT8U **rbuf,INT8U *sp,INT8U len);
 void GetCfgMd5(INT32U *buf);
 void SetCfgMd5(INT32U *buf);
@@ -297,41 +297,41 @@ void StartIWDG(void);
 
 #define GetTurnDir()		GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_1)
 /**********************************************************************************************************
-*api  ϵͳ�ṩAPI ����ӦӦ�ó������
+*api  系统提供API ，供应应用程序调用
 *
 ********************************************************************************************************/
 
-#define OpenUpRelay() 		GPIO_SetBits(GPIOC,GPIO_Pin_4)/*������Һѹ��ŷ�*/
-#define OpenDownRelay() 	GPIO_SetBits(GPIOC,GPIO_Pin_5)/*���½�Һѹ��ŷ�*/
+#define OpenUpRelay() 		GPIO_SetBits(GPIOC,GPIO_Pin_4)/*打开上升液压电磁阀*/
+#define OpenDownRelay() 	GPIO_SetBits(GPIOC,GPIO_Pin_5)/*打开下降液压电磁阀*/
 #define CloseUpRelay() 		GPIO_ResetBits(GPIOC,GPIO_Pin_4)
 #define CloseDownRelay() 	GPIO_ResetBits(GPIOC,GPIO_Pin_5)
 #define CloseAllRelay()   GPIO_ResetBits(GPIOC,GPIO_Pin_4);GPIO_ResetBits(GPIOC,GPIO_Pin_5);
-#define OpenRunBreak()    GPIO_SetBits(GPIOB,GPIO_Pin_2)/*ɲ������*/
+#define OpenRunBreak()    GPIO_SetBits(GPIOB,GPIO_Pin_2)/*刹车控制*/
 #define CloseRunBreak()   GPIO_ResetBits(GPIOB,GPIO_Pin_2)
-#define OpenTurnBreak()   GPIO_SetBits(GPIOA,GPIO_Pin_5)/*ɲ������*/
+#define OpenTurnBreak()   GPIO_SetBits(GPIOA,GPIO_Pin_5)/*刹车控制*/
 #define CloseTurnBreak()  GPIO_ResetBits(GPIOA,GPIO_Pin_5)
 #define GetTurnBreak()		GPIO_ReadOutputDataBit(GPIOA,GPIO_Pin_5)
-#define OpenUS() 					GPIO_SetBits(GPIOC,GPIO_Pin_2)  /*�򿪳������*/
+#define OpenUS() 					GPIO_SetBits(GPIOC,GPIO_Pin_2)  /*打开超声测距*/
 #define CloseUS() 				GPIO_ResetBits(GPIOC,GPIO_Pin_2) 
-#define GetUS() 					GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_3)/*������Ӧ��״̬*/
+#define GetUS() 					GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_3)/*超声回应脚状态*/
 #define SetSafeLine() 			GPIO_SetBits(GPIOC,GPIO_Pin_10)
 #define ResetSafeLine() 	  GPIO_ResetBits(GPIOC,GPIO_Pin_10)
 #define GetKey()           (GPIO_ReadInputData(GPIOC)>>13)
-//#define GetHCTrig() 			GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_4)/*����λ�û�������*/
+#define GetHCStatus() 			GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_4)/*中心位置霍尔触发*/
 #define WifiEnable()         GPIO_SetBits(WIFI_RST_PORT,WIFI_RST_PIN)
 #define WifiDisable()   		  GPIO_ResetBits(WIFI_RST_PORT,WIFI_RST_PIN)
 #define ZigbeeEnable()       GPIO_SetBits(ZIGBEE_PORT,ZIGBEE_RST_PIN)
 #define ZigbeeDisable()   		GPIO_ResetBits(ZIGBEE_PORT,ZIGBEE_RST_PIN)
-//����Ƕȷ���-1800-1799 ����0.1��
+//计算角度返回-1800-1799 精度0.1度
 #define GetArc(a,b) (INT16S)(atan2((float)(a),(float)(b))*1800.0/PI)
 /*******************************************
-*	�ڴ濽�� src->dst
+*	内存拷贝 src->dst
 *******************************************/
 void MemCpy(INT8U *src,INT8U *dst,INT8U n);
 INT8U CheckSum8(INT8U *buf,INT32U len);
 /*******************************************
-*	buf ���ͻ�����ָ��
-*	n   �ֽ���
+*	buf 发送缓存区指针
+*	n   字节数
 *******************************************/
 void Wifi_AT(INT8U *buf,INT8U n);
 void Wifi_send(INT8U *buf,INT8U n);
@@ -341,92 +341,92 @@ void Uhfid_send(INT8U *buf,INT8U n);
 
 /*******************************************
 *	chl=0,1,2
-*	return 0-1000 ÿ���������Ŵ�10��
+*	return 0-1000 每秒脉冲数放大10倍
 *******************************************/
 INT16U GetMotorSpd(INT8U chl);
 /*******************************************
 *	chl=0,1,2
-*	return �ϵ��������������
+*	return 上电以来的脉冲计数
 *******************************************/
 INT32U GetMotorPoscn(INT8U chl);
 /*******************************************
 *	chl=0,1,2
-*	spd �ٶȰٷְ�0-100
+*	spd 速度百分百0-100
 *******************************************/
 void SetMotorSpd(INT8U chl,INT16U spd); 
 /*******************************************
 *	chl=0,1,2,3
-*	dspd �ٶȵ��ڲ�ֵ
-* sspd  �趨������
+*	dspd 速度调节差值
+* sspd  设定的数度
 *******************************************/
 void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd); 
 /*******************************************
-*	�õ��ⲿ��ѹ
+*	得到外部电压
 *******************************************/
 INT16U GetXV(void);
 
 /*******************************************
-*	ADXL345��ȡ����	,bufsize=6,ȡȫ������
+*	ADXL345获取数据	,bufsize=6,取全部数据
 *******************************************/
 INT8U ADXL_GetData(INT8U *buf,INT8U bufsize);
 /*******************************************
-*	hmc5983��ȡ����,bufsize=12,ȡȫ������ǰ6��Ϊһ��ģ�飬��6��Ϊ����һ��
+*	hmc5983获取数据,bufsize=12,取全部数据前6个为一个模块，后6个为另外一个
 *******************************************/
 INT8U HMC_GetData(INT8U *buf,INT8U bufsize);
 /*******************************************
-*	ѹ����������ȡ����,
-* chl=0��Aͨ��,1��Bͨ��
-* return 0: ��Ч
-*        ��0����Ч
+*	压力传感器获取数据,
+* chl=0：A通道,1：B通道
+* return 0: 无效
+*        非0：有效
 *******************************************/
 INT8U GetPSData(INT8U chl,INT32S *data);
 /*******************************************
-*	�жϳ����Ƿ�ص�����λ�ã�1�����ģ�0��������
+*	判断车体是否回到中心位置，1：中心，0：非中心
 *******************************************/
 INT8U CheckCenter(void);
-// �ж�wifi�Ƿ�����,��������� �Զ���������
+// 判断wifi是否连接,如果非连接 自动从新连接
 void WifiLink(void);
-// �ж�wifi״̬
+// 判断wifi状态
 INT8U WifiStatus(void);
-// �ж�zigbee�Ƿ�����,��������� �Զ���������
+// 判断zigbee是否连接,如果非连接 自动从新连接
 void ZigbeeLink(void);
 
 
-//�ж��ǲ������߲��ֵ����ݣ������м�֡����
+//判断是不是无线部分的数据，返回有几帧数据
 INT8U IsNetData(INT8U *buf,INT8U len);
-//�õ�������ַ
+//得到本机地址
 INT8U GetAddr(void);
 void SetAddr(INT8U addr);
-//��ѯID�����ݣ������ҵ��Ľṹ���ַ��0��û�ҵ�
+//查询ID卡数据，返回找到的结构体地址，0：没找到
 RFID * GetRfidStruct(INT16U id);
-//uhfid command ���� �ر�
+//uhfid command 开启 关闭
 #define UHFID_CMD_OPEN	1
 #define UHFID_CMD_CLOSE	0
 void UhfidSwitch(INT8U cmd);
 
-//�õ�������
+//得到卡数据
 #define RDID_BITS	0xffff
 INT32U ParseUhfid(INT8U *buf,INT8S *RSSI,INT8U len);
-/*���ҿ�����*/
+/*查找卡命令*/
 IDCMD *FindUhfidCmd(RFID *p_rfid,INT8U cmd,int dt);
-/*���Ҍ������l����*/
+/*查找對應的下條命令*/
 IDCMD *FindUhfidNextCmd(RFID *p_rfid,INT8U cmd,int dt);
-/*�������Ŀ*/
+/*查找命令數目*/
 INT32U GetUhfidCmdNumber(RFID *p_rfid,INT8U cmd);
 
 void SaveSysSet(void);
-/*�������*/
+/*方向控制*/
 void TurnLeft(void);  
 void TurnRight(void);    
-//��֪����׼������
+//告知数据准备好了
 void UARTMboxPost(INT8U n,INT8U chl);
-//����������ת��ƽ��
+//调整左右轮转速平衡
 void AdjustMotorBalance(INT32S dps);
-//�������
+//计算距离
 void CalcUS(void);
-//�õ�����
+//得到距离
 INT16U GetFrontSafeDis(void);
-//�鿴���늴��y�Ĵ��_��B
+//查看對於電磁閥的打開狀態
 INT8U GetRelayStatus(void);
 //api end
 #endif
