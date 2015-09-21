@@ -3,7 +3,7 @@
 #include "flash_if.h"
 #include "math.h"
 
-INT8U LvSystbuf[SYS_TBUF_LEN+8];//ÏµÍ³ÁÙÊ±»º´æ
+INT8U LvSystbuf[SYS_TBUF_LEN+8];//ç³»ç»Ÿä¸´æ—¶ç¼“å­˜
 INT8U Sysrbuf[SYS_RBUF_LEN];
 INT8U Uarttbuf[SYS_TBUF_LEN];
 //INT8U n_uartTX;
@@ -11,7 +11,7 @@ INT8U *Systbuf;
 INT32U G_msg[2];
 //INT32U SysStatus,
 INT8U b_debug=0,sw_power=0;
-SENSOR m_sensor[2];//0,µ±Ç°£¬1£¬±£ÁôÉÏ´Î
+SENSOR m_sensor[2];//0,å½“å‰ï¼Œ1ï¼Œä¿ç•™ä¸Šæ¬¡
 INT32U lastsendtime=0;
 INT16U datalinktime = 0;
 IDCMD m_icmd;
@@ -82,8 +82,8 @@ void nopf(void)
 {
 }
 
-//ÓÉÓ¦ÓÃ³ÌĞòµ÷ÓÃ
-void MSDelay(UINT ms)//²ÎÊı£ºms
+//ç”±åº”ç”¨ç¨‹åºè°ƒç”¨
+void MSDelay(UINT ms)//å‚æ•°ï¼šms
 {
   OSTimeDly(ms);
 }
@@ -93,7 +93,7 @@ void MSDelay(UINT ms)//²ÎÊı£ºms
         if(lasttick==0) 
           lasttick=ct;*/
 //-------------------
-//Ö÷ÈÎÎñº¯Êı1/4
+//ä¸»ä»»åŠ¡å‡½æ•°1/4
 #define DATALINKTIME	500
 void MainTaskProc(void *p_msg)
 {
@@ -107,8 +107,8 @@ void MainTaskProc(void *p_msg)
 		}
 		//----------------------------
 		if(!b_debug)
-			WifiLink();//ÈÃwifi¶ÏÏß´ÓĞÂÁ¬½Ó
-		ZigbeeLink();//zigbee¶ÏÏß´ÓĞÂÁ¬½Ó
+			WifiLink();//è®©wifiæ–­çº¿ä»æ–°è¿æ¥
+		ZigbeeLink();//zigbeeæ–­çº¿ä»æ–°è¿æ¥
 		if (datalinktime++ > DATALINKTIME){
 			AdjustMotorSpd(MOTOR_RL, -10, 30);
 			AdjustMotorSpd(MOTOR_RR, -10, 30);
@@ -120,7 +120,7 @@ void MainTaskProc(void *p_msg)
 		OSTimeDly(10);		
 	}
 }
-//ÈÎÎñº¯Êı 2/4
+//ä»»åŠ¡å‡½æ•° 2/4
 void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 {
 	static INT8U debugcmd=0;
@@ -159,7 +159,7 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 				SetWifiLinkTime();						
 			}
 	
-			//Debug(buf,len);//ÖØ¸´È¡Ïû
+			//Debug(buf,len);//é‡å¤å–æ¶ˆ
 		}		
 		else if(chl==UART_CHL_ZIGBEE){
 			if(IsNetData(buf,len)){
@@ -187,7 +187,7 @@ void UartRecvProc(uint8_t chl,uint8_t *buf,uint32_t len)
 }
 
 
-//ÈÎÎñº¯Êı 3/4
+//ä»»åŠ¡å‡½æ•° 3/4
 void AppRunProc(void  *p_msg)
 {
 // 	INT32U tmp;
@@ -203,7 +203,7 @@ void AppRunProc(void  *p_msg)
 				if(!m_car.err){
 					Systbuf[0]=C_PC_CFG_JOIN;
 					Systbuf[1]=GetKey()&KEY_JOIN;
-					Get_SerialNum((INT32U *)(Systbuf+2));//12×Ö½Ú
+					Get_SerialNum((INT32U *)(Systbuf+2));//12å­—èŠ‚
 					NetSend(14,NET_CHL_ALL);//INIT
 					OSTimeDly(1000);
 				}
@@ -225,7 +225,7 @@ void AppRunProc(void  *p_msg)
 					SetMotorSpd(MOTOR_RL,0);
 					SetMotorSpd(MOTOR_RR,0);
 				}
-				else{//ÕÒ¿¨
+				else{//æ‰¾å¡
 					if(m_car.pos<CAR_CHECK_POS){
 						AdjustMotorSpd(MOTOR_RL,1,20);
 						AdjustMotorSpd(MOTOR_RR,1,20);
@@ -280,7 +280,7 @@ void AppRunProc(void  *p_msg)
 	
 	}
 }
-//ÈÎÎñº¯Êı 4/4
+//ä»»åŠ¡å‡½æ•° 4/4
 void SensorProc(void)
 {
 	static INT32S abuf[2]={0,0};
@@ -292,7 +292,7 @@ void SensorProc(void)
 	int tmp;
 //	INT8U *bp=(INT8U *)buf; 	
 	memcpy((void *)&m_sensor[1],(void *)&m_sensor[0],sizeof(SENSOR));
-	//µÃµ½»ô¶û £¬¼ÓËÙ¶È£¬Ñ¹Á¦´«¸ĞÆ÷
+	//å¾—åˆ°éœå°” ï¼ŒåŠ é€Ÿåº¦ï¼Œå‹åŠ›ä¼ æ„Ÿå™¨
 	ADXL_GetData((INT8U *)buf,6);
 	abuf[0]=((int)abuf[0]*31>>5)+buf[0];
 	abuf[1]=((int)abuf[1]*31>>5)+buf[1];
@@ -304,7 +304,7 @@ void SensorProc(void)
 	hbuf[2]=((int)hbuf[2]*7>>3)+buf[6];
 	hbuf[3]=((int)hbuf[3]*7>>3)+buf[8];		
 	p_sensor->rotation[1]=GetArc(hbuf[2],hbuf[3]);	
-	//------------¸üĞÂÆ«ÒÆÁ¿
+	//------------æ›´æ–°åç§»é‡
 	m_sysset.g_offx=abuf[0]>>5;
 	m_sysset.g_offy=abuf[1]>>5;
 	m_sysset.hmc_off=p_sensor->rotation[0]-p_sensor->rotation[1];
@@ -313,19 +313,19 @@ void SensorProc(void)
 	if(m_sysset.hmc_off<=-1800)
 		m_sysset.hmc_off+=3600;	
 	m_sysset.rfid=m_car.p_rfid[0]->id;
-	//-Ñ¹Á¦´«¸ĞÆ÷Öµ
+	//-å‹åŠ›ä¼ æ„Ÿå™¨å€¼
 	  if(GetPSData(PS_CHL_A,(INT32S *)buf))
 			p_sensor->ps=*(INT32S *)buf;
-	//µÃµ½Íâ²¿µçÑ¹
+	//å¾—åˆ°å¤–éƒ¨ç”µå‹
 		p_sensor->xv=GetXV();
-	//µÃµ½µç»úÊı¶ÈºÍÂö³åÊı
+	//å¾—åˆ°ç”µæœºæ•°åº¦å’Œè„‰å†²æ•°
 		p_sensor->turnspeed=GetMotorSpd(MOTOR_TURN);
 		p_sensor->runspeed[0]=GetMotorSpd(MOTOR_RL);	
 		p_sensor->runspeed[1]=GetMotorSpd(MOTOR_RR);
 		p_sensor->t_np=(INT32S)GetMotorPoscn(MOTOR_TURN);
 		p_sensor->r_np[0]=GetMotorPoscn(MOTOR_RL);	
 		p_sensor->r_np[1]=GetMotorPoscn(MOTOR_RR);
-	//---¼ì²éÊÇ·ñ»ØÕı
+	//---æ£€æŸ¥æ˜¯å¦å›æ­£
 		if(CheckCenter()){
 			p_sensor->b_hall|=B_HALL_C;
 			p_sensor->lastt_np=p_sensor->t_np;
@@ -333,7 +333,7 @@ void SensorProc(void)
 		}
 		else
 			p_sensor->b_hall&=(~B_HALL_C);	
-	//¼ÆËã½Ç¶È¶ÔÓ¦np
+	//è®¡ç®—è§’åº¦å¯¹åº”np
 		m_car.turnangle_np=p_sensor->t_np-p_sensor->lastt_np;
 		/*tmp=p_sensor->t_np-p_sensor->lastt_np;
 		p_sensor->lastt_np=p_sensor->t_np;
@@ -343,7 +343,7 @@ void SensorProc(void)
 			m_car.turnangle_np-=tmp;*/
 
 
-	//ÕâÀïÌí¼Ó²â¾àº¯Êı
+	//è¿™é‡Œæ·»åŠ æµ‹è·å‡½æ•°
 		tmp=(m_sensor[0].runspeed[0]>>2)+(m_sensor[0].runspeed[1]>>2);
 		tmp+=(m_sensor[1].runspeed[0]>>2)+(m_sensor[1].runspeed[1]>>2);
 		m_car.spd=SPDMODIFY(tmp);
@@ -361,7 +361,7 @@ void SensorProc(void)
 						UARTMboxPost(2,NET_CHL_ALL);
 						//NetSend(2,NET_CHL_ALL);//heart
 					}
-	//Åö×²¼ì²â
+	//ç¢°æ’æ£€æµ‹
 #define SAFE_DIS	320
 		m_car.frontsafedis=m_car.frontsafedis*7+GetFrontSafeDis()>>3;
 		TrigUS();
@@ -396,9 +396,9 @@ void SensorProc(void)
 void Debug(INT8U *buf,INT8U len)
 {
 			if(buf[0]=='D'&&buf[1]=='B'&&buf[2]=='G'){//debug spi
-			if(buf[3]=='S'){//spi ×ÜÏßÊı¾İ
+			if(buf[3]=='S'){//spi æ€»çº¿æ•°æ®
 				if(buf[4]=='W'){//write
-					//SpiWrite(buf[6],buf+8,buf[7]&7,buf[5]);//µØÖ· £¬Êı¾İÇø£¬ÒªÇó³¤¶È£¬CSÑ¡Ôñ
+					//SpiWrite(buf[6],buf+8,buf[7]&7,buf[5]);//åœ°å€ ï¼Œæ•°æ®åŒºï¼Œè¦æ±‚é•¿åº¦ï¼ŒCSé€‰æ‹©
 					
 				}		
 				else if(buf[4]=='R'){//read
@@ -408,16 +408,16 @@ void Debug(INT8U *buf,INT8U len)
 					Wifi_send(buf+8,buf[7]&7);
 				}
 			}
-			else if(buf[3]=='P'){//Ñ¹Á¦´«¸ĞÆ÷Êı¾İ
+			else if(buf[3]=='P'){//å‹åŠ›ä¼ æ„Ÿå™¨æ•°æ®
 				buf[9]=GetPSData(buf[4],(INT32S *)(buf+5));
 				Wifi_send(buf+5,5);
 			}
-			else if(buf[3]=='M'){//ÄÚ´æÊı¾İ
+			else if(buf[3]=='M'){//å†…å­˜æ•°æ®
 				if(buf[4]=='R'){//read
 					Wifi_send((INT8U *)(0x20000000+(*(INT32U *)(buf+5)&0x4fff)),16);
 				}
 			}
-			else if(buf[3]=='C'){//ÃüÁî
+			else if(buf[3]=='C'){//å‘½ä»¤
 				if(buf[4]=='S')
 						Wifi_send((INT8U *)m_sensor,sizeof(m_sensor));
 			}		
@@ -453,7 +453,7 @@ INT8U DowloadCFG(void)
 	if(WifiStatus()==WIFI_ST_OK){
 		Systbuf[0]=C_PC_CFG_MD5;
 		NetSend(1,NET_CHL_WIFI);//DL
-		msg = OSMboxPend(App_StartMbox, 3000, &err);//µÈ´ı3Ãë
+		msg = OSMboxPend(App_StartMbox, 3000, &err);//ç­‰å¾…3ç§’
 		if(err==OS_ERR_NONE&&(msg[0]&0xff)==C_PC_CFG_DL){
 			if(msg[1]==C_PC_CFG_DL_OK)
 				return 1;
@@ -481,7 +481,7 @@ void NetCmdProc(INT8U *buf,INT8U len)
 				break;
 			case C_PC_CFG_MD5://cmd(1)+data(n)
 				GetCfgMd5(mbuf);
-				if(memcmp((INT8U *)mbuf,rbuf+1,16)&&*(INT32U *)(rbuf+17)==PROGRAMM_KEY){//²»Ò»Ñù£¬´ÓĞÂÏÂÔØ
+				if(memcmp((INT8U *)mbuf,rbuf+1,16)&&*(INT32U *)(rbuf+17)==PROGRAMM_KEY){//ä¸ä¸€æ ·ï¼Œä»æ–°ä¸‹è½½
 					memcpy(mbuf,rbuf+1,16);
 					CfgClear();
 					b_dl=1;
@@ -807,13 +807,13 @@ void TurnCtrl(IDCMD *p_ic)
     //if(sro<=-(ANGLE_CYCLE>>1)) sro+=ANGLE_CYCLE;
 
     if (sro>=0)
-        dir=1;//Õı×ª
+        dir=1;//æ­£è½¬
     else
         sro=-sro;
     if (sro>ANGLE_MAX)
         sro=ANGLE_MAX;
 
-		if(TurnDir==dir)//·½ÏòÊµ¼ÊÏà·´
+		if(TurnDir==dir)//æ–¹å‘å®é™…ç›¸å
 			cdir++;
 		else
 			cdir=0;
@@ -1059,8 +1059,8 @@ void UartSendProc(INT8U n,INT8U chl)
 INT8U CheckSelf(void)
 {
 	INT32S tmp[2],n;//re=0x400;
-	//return 0;//debug È¡Ïû
-	//µçÑ¹ ÂÖ×Ó ×ªÌ¨ Ñ¡ÔñÖĞĞÄ ÇãĞ±
+	//return 0;//debug å–æ¶ˆ
+	//ç”µå‹ è½®å­ è½¬å° é€‰æ‹©ä¸­å¿ƒ å€¾æ–œ
 	m_car.err=0x1f;	
 	n=10;
 	while(--n&&m_sensor[0].xv<3000)
@@ -1096,26 +1096,46 @@ INT8U CheckSelf(void)
 		}
 	}
 	tmp[0]=0;
-	n=100;
+	n=500;
 	while(--n&&TURNANGLEMODIFY(m_car.turnangle_np)<CHECK_TA){
 		if(m_sensor[0].b_hall|B_HALL_C){
 			tmp[0]++;
 			break;
 		}
-		OSTimeDly(100);
+		OSTimeDly(8);
+		if(m_sensor[0].b_hall|B_HALL_C){
+			tmp[0]++;
+			break;
+		}
+		OSTimeDly(8);
+		if(m_sensor[0].b_hall|B_HALL_C){
+			tmp[0]++;
+			break;
+		}
+		OSTimeDly(8);
 	}
 	if(tmp[0]==0){
 		SetMotorSpd(MOTOR_TURN,0);
 		OSTimeDly(3000);
 		TurnRight();
-		n=100;
+		n=500;
 		while(--n&&TURNANGLEMODIFY(m_car.turnangle_np)>-CHECK_TA){
 			AdjustMotorSpd(MOTOR_TURN,2,20);
 			if(m_sensor[0].b_hall|B_HALL_C){
 				tmp[0]++;
 				break;
 			}
-			OSTimeDly(100);
+			OSTimeDly(8);
+			if(m_sensor[0].b_hall|B_HALL_C){
+				tmp[0]++;
+				break;
+			}
+			OSTimeDly(8);
+			if(m_sensor[0].b_hall|B_HALL_C){
+				tmp[0]++;
+				break;
+			}
+			OSTimeDly(8);
 		}
 	}
 	if(tmp[0])
