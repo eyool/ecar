@@ -130,7 +130,7 @@ INT8U CheckCenter(void)
 		IsCenter=0;
 		return 1;
 	}
-	return 0;
+	return !GetHCStatus();
 }
 /////////////
 void GPIO_Configuration(void)
@@ -159,21 +159,21 @@ void GPIO_Configuration(void)
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_Init(SAFELINEPS_PORT, &GPIO_InitStructure);  
   GPIO_SetBits(SAFELINEPS_PORT,SAFELINEPS_PIN);
-	//µÃµ½µØÖ·
+	//å¾—åˆ°åœ°å€
 //  uDelay(150);
 //  DevAddr=GPIO_ReadInputDataBit(GPIOA,GPIO_Pin_5)|((GPIO_ReadInputDataBit(GPIOB,GPIO_Pin_2))<<1)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_4))<<2)|((GPIO_ReadInputDataBit(GPIOC,GPIO_Pin_5))<<3);
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5; //2,3
   GPIO_Init(GPIOC, &GPIO_InitStructure); 	
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2; //ÔËĞĞÉ²³µ
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2; //è¿è¡Œåˆ¹è½¦
   GPIO_Init(GPIOB, &GPIO_InitStructure); 		
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5; //Ğı×ªÉ²³µ
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5; //æ—‹è½¬åˆ¹è½¦
   GPIO_Init(GPIOA, &GPIO_InitStructure); 	
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5; //·½Ïò¿ØÖÆ
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5; //æ–¹å‘æ§åˆ¶
   GPIO_Init(GPIOB, &GPIO_InitStructure); 		
 	CloseUpRelay();
 	CloseDownRelay();	
-	//³¬Éù²â¾à
+	//è¶…å£°æµ‹è·
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;	
   GPIO_Init(GPIOC, &GPIO_InitStructure); 	
@@ -199,11 +199,11 @@ void GPIO_Configuration(void)
   NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x04;
   NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
   NVIC_Init(&NVIC_InitStructure);
-	//»ô¶û´«¸ĞÆ÷
+	//éœå°”ä¼ æ„Ÿå™¨
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;		
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4; 
   GPIO_Init(GPIOA, &GPIO_InitStructure); 		
-	//cntd Ğı×ª·½Ïò
+	//cntd æ—‹è½¬æ–¹å‘
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;	
 	GPIO_InitStructure.GPIO_Pin =GPIO_Pin_1;
   GPIO_Init(GPIOC, &GPIO_InitStructure); 
@@ -302,9 +302,9 @@ void WIFI_init(void)
   //DMA_Cmd(WIFI_DMA_TX_Channel, ENABLE);
   DMA_Cmd(WIFI_DMA_RX_Channel, ENABLE);
   USART_Cmd(WIFI_AF, ENABLE);  
-   //´ò¿ª½ÓÊÕÖĞ¶Ï
+   //æ‰“å¼€æ¥æ”¶ä¸­æ–­
   //DMA_ITConfig(WIFI_DMA_RX_Channel,DMA_IT_TC,ENABLE);
-  USART_ITConfig(WIFI_AF, USART_IT_IDLE, ENABLE); 	//¿ÕÏĞÖĞ¶Ï£¬Ö¸Ê¾Êı¾İ½ÓÊÜÍê³É    
+  USART_ITConfig(WIFI_AF, USART_IT_IDLE, ENABLE); 	//ç©ºé—²ä¸­æ–­ï¼ŒæŒ‡ç¤ºæ•°æ®æ¥å—å®Œæˆ    
 	WifiDisable();
 }
 void ZIGBEE_init(void)
@@ -390,9 +390,9 @@ void ZIGBEE_init(void)
   //DMA_Cmd(ZIGBEE_DMA_TX_Channel, ENABLE);
   DMA_Cmd(ZIGBEE_DMA_RX_Channel, ENABLE);
   USART_Cmd(ZIGBEE_AF, ENABLE);  
-   //´ò¿ª½ÓÊÕÖĞ¶Ï
+   //æ‰“å¼€æ¥æ”¶ä¸­æ–­
   //DMA_ITConfig(ZIGBEE_DMA_RX_Channel,DMA_IT_TC,ENABLE);
-  USART_ITConfig(ZIGBEE_AF, USART_IT_IDLE, ENABLE); 	//¿ÕÏĞÖĞ¶Ï£¬Ö¸Ê¾Êı¾İ½ÓÊÜÍê³É 
+  USART_ITConfig(ZIGBEE_AF, USART_IT_IDLE, ENABLE); 	//ç©ºé—²ä¸­æ–­ï¼ŒæŒ‡ç¤ºæ•°æ®æ¥å—å®Œæˆ 
 	ZigbeeDisable();
 }
 void UHFID_init(void)
@@ -472,9 +472,9 @@ void UHFID_init(void)
   //DMA_Cmd(UHFID_DMA_TX_Channel, ENABLE);
   DMA_Cmd(UHFID_DMA_RX_Channel, ENABLE);
   USART_Cmd(UHFID_AF, ENABLE); 
-   //´ò¿ª½ÓÊÕÖĞ¶Ï
+   //æ‰“å¼€æ¥æ”¶ä¸­æ–­
   //DMA_ITConfig(UHFID_DMA_RX_Channel,DMA_IT_TC,ENABLE);
-  USART_ITConfig(UHFID_AF, USART_IT_IDLE, ENABLE); 	//¿ÕÏĞÖĞ¶Ï£¬Ö¸Ê¾Êı¾İ½ÓÊÜÍê³É 
+  USART_ITConfig(UHFID_AF, USART_IT_IDLE, ENABLE); 	//ç©ºé—²ä¸­æ–­ï¼ŒæŒ‡ç¤ºæ•°æ®æ¥å—å®Œæˆ 
 
 }
 void SPI_init(void)
@@ -631,8 +631,8 @@ void ADCInit(void)
   ADC_InitTypeDef           ADC_InitStructure;
   GPIO_InitTypeDef GPIO_InitStructure;
   
-  RCC_APB2PeriphClockCmd(ADC_RCC_APB2|ADC_PORT_APB2 ,ENABLE ); //Ê¹ÄÜADC1Í¨µÀÊ±ÖÓ£¬¸÷¸ö¹Ü½ÅÊ±ÖÓ
-  RCC_ADCCLKConfig(RCC_PCLK2_Div8);   //72M/6=12,ADC×î´óÊ±¼ä²»ÄÜ³¬¹ı14M
+  RCC_APB2PeriphClockCmd(ADC_RCC_APB2|ADC_PORT_APB2 ,ENABLE ); //ä½¿èƒ½ADC1é€šé“æ—¶é’Ÿï¼Œå„ä¸ªç®¡è„šæ—¶é’Ÿ
+  RCC_ADCCLKConfig(RCC_PCLK2_Div8);   //72M/6=12,ADCæœ€å¤§æ—¶é—´ä¸èƒ½è¶…è¿‡14M
   //
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
@@ -657,7 +657,7 @@ void ADCInit(void)
   ADC_InitStructure.ADC_NbrOfChannel = 1;
   ADC_Init(ADC_AF, &ADC_InitStructure);
 
-  /* ADC1 regular channel14 configuration */ //ADC1,ADCÍ¨µÀx,¹æÔò²ÉÑùË³ĞòÖµÎªy,²ÉÑùÊ±¼äÎª239.5ÖÜÆÚ
+  /* ADC1 regular channel14 configuration */ //ADC1,ADCé€šé“x,è§„åˆ™é‡‡æ ·é¡ºåºå€¼ä¸ºy,é‡‡æ ·æ—¶é—´ä¸º239.5å‘¨æœŸ
   ADC_RegularChannelConfig(ADC_AF, ADC_XV_CHL, 1, ADC_SampleTime_28Cycles5 );
  
   /* Enable ADC1 */
@@ -850,7 +850,7 @@ void SpdCap_Istr(INT8U chl,INT16U cn)
 	static INT16U lastcap[4]={0,0,0,0};
 	INT32U tick=OSTimeGet();
 	chl=(chl>>2)&3;
-	if(tick>lastcaptick[chl]+STOP_TICK_LEN)	//s ÎŞÂö³åÈÏÎªÍ£Ö¹
+	if(tick>lastcaptick[chl]+STOP_TICK_LEN)	//s æ— è„‰å†²è®¤ä¸ºåœæ­¢
 		Spd_Motor[chl]=0xffff;
 	else if(cn>=lastcap[chl])
 			Spd_Motor[chl]=cn-lastcap[chl];
@@ -912,7 +912,7 @@ void MemCpy(INT8U *src,INT8U *dst,INT8U n)
 //api
 /*******************************************
 *	chl=0,1,2
-*	return 0-1000 Ã¿ÃëÂö³åÊı·Å´ó8±¶
+*	return 0-1000 æ¯ç§’è„‰å†²æ•°æ”¾å¤§8å€
 *******************************************/
 INT16U GetMotorSpd(INT8U chl)
 {
@@ -922,10 +922,10 @@ INT16U GetMotorSpd(INT8U chl)
 	if(chl>=4)
 		chl=(chl>>2)&3;
 
-	if(chl==3)//ËÙ¶ÈºÍ²¶»ñÍ¨µÀ²»Ò»ÖÂµ÷Õû
+	if(chl==3)//é€Ÿåº¦å’Œæ•è·é€šé“ä¸ä¸€è‡´è°ƒæ•´
 		chl=1;
 
-	if(OSTimeGet()>lastcaptick[chl]+STOP_TICK_LEN)//0ËÙ¶Èµ÷Õû
+	if(OSTimeGet()>lastcaptick[chl]+STOP_TICK_LEN)//0é€Ÿåº¦è°ƒæ•´
 		return 0;
 
 	if(Spd_Motor[chl])
@@ -934,23 +934,23 @@ INT16U GetMotorSpd(INT8U chl)
 		re=10000;
 	tmp=(re+lastre[chl])>>1;
 	lastre[chl]=re;
-    //ÕâÀïµÄÊı¶ÈĞèÒª´¦Àí³É0-100
+    //è¿™é‡Œçš„æ•°åº¦éœ€è¦å¤„ç†æˆ0-100
     //tmp>>=2;
 	return tmp;
 }
 /*******************************************
 *	chl=0,1,2
-*	return ÉÏµçÒÔÀ´µÄÂö³å¼ÆÊı
+*	return ä¸Šç”µä»¥æ¥çš„è„‰å†²è®¡æ•°
 *******************************************/
 INT32U GetMotorPoscn(INT8U chl)
 {
-	if(chl==3)//ËÙ¶ÈºÍ²¶»ñÍ¨µÀ²»Ò»ÖÂµ÷Õû
+	if(chl==3)//é€Ÿåº¦å’Œæ•è·é€šé“ä¸ä¸€è‡´è°ƒæ•´
 		chl=1;
 	return Spd_Motor_cn[chl];
 }
 /*******************************************
 *	chl=0,1,2,3
-*	spd ËÙ¶È°Ù·Ö°Ù0-100
+*	spd é€Ÿåº¦ç™¾åˆ†ç™¾0-100
 *******************************************/
 void SetMotorSpd(INT8U chl,INT16U spd)
 {
@@ -1049,7 +1049,7 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 	}
 }
 /*******************************************
-*	µÃµ½Íâ²¿µçÑ¹
+*	å¾—åˆ°å¤–éƒ¨ç”µå‹
 *******************************************/
 INT16U GetXV(void)
 {
@@ -1133,7 +1133,7 @@ void ADXL_init(void)
 //	buf[1]=m_sysset.g_offy ;//
 //	buf[2]=m_sysset.g_offz ;
 //	SpiWrite(ADXL_XOFF,buf,3,SPI_CS_ADXL);
-	buf[0]=ADXL_FULL|ADXL_4G;//È«·Ö±æÂÊ 4g
+	buf[0]=ADXL_FULL|ADXL_4G;//å…¨åˆ†è¾¨ç‡ 4g
 	SpiWrite(ADXL_DATA_FORMAT,buf,1,SPI_CS_ADXL);	
 }
 void HMC_init(void)
@@ -1187,7 +1187,7 @@ INT8U GetPSData(INT8U chl,INT32S *data)
 		*data<<=1;
 		*data|=GPIO_ReadInputDataBit(PS_PORT,PS_POUT_PIN);				
 		GPIO_ResetBits(PS_PORT,PS_PSCK_PIN);
-		*data&=0xffffffff;//ÎŞĞ§²Ù×÷£¬ÑÓ³¤Ê±¼ä
+		*data&=0xffffffff;//æ— æ•ˆæ“ä½œï¼Œå»¶é•¿æ—¶é—´
 	}
 	*data>>=chl;
 	if(*data>>23)
@@ -1234,7 +1234,7 @@ void Wifi_SetReSrv(void)
 {
 	//INT8U buf[64]={'+','+','+'};
 	Status_Wifi=0;
-	Wifi_AT(WIFI_OUTSEND,sizeof(WIFI_OUTSEND)-1);//×Ö·û´®²»·¢½áÊø·û
+	Wifi_AT(WIFI_OUTSEND,sizeof(WIFI_OUTSEND)-1);//å­—ç¬¦ä¸²ä¸å‘ç»“æŸç¬¦
 	OSTimeDly(30);
 	//strcpy(buf,WIFI_RESRV,sizeof(WIFI_RESRV);
 	Wifi_AT(WIFI_SETRESRV,sizeof(WIFI_SETRESRV)-1);	
@@ -1391,7 +1391,7 @@ COM12, Read(1): AA  | a
 COM12, Read(1): 02  | \#2
 COM12, Read(1): 22  | "
 COM12, Read(2): 00 11  | \#0\#17
-COM12, Read(17): C0 30 00 E2 00 10 00 78 05 02 48 11 30 A6 A3 53 03  | ¨¤0\#0a\#0\#16\#0x\#5\#2H\#170|¡êS\#3
+COM12, Read(17): C0 30 00 E2 00 10 00 78 05 02 48 11 30 A6 A3 53 03  | Ã 0\#0a\#0\#16\#0x\#5\#2H\#170|ï¿¡S\#3
 COM12, Read(1): BE  | ?
 COM12, Read(1): 8E  | ?
 */
@@ -1508,8 +1508,8 @@ void StartIWDG(void)
 }
 INT8U GetRelayStatus(void)
 {
-//#define OpenUpRelay() 		GPIO_SetBits(GPIOC,GPIO_Pin_4)/*´ò¿ªÉÏÉıÒºÑ¹µç´Å·§*/
-//#define OpenDownRelay() 	GPIO_SetBits(GPIOC,GPIO_Pin_5)/*´ò¿ªÏÂ½µÒºÑ¹µç´Å·§*/
+//#define OpenUpRelay() 		GPIO_SetBits(GPIOC,GPIO_Pin_4)/*æ‰“å¼€ä¸Šå‡æ¶²å‹ç”µç£é˜€*/
+//#define OpenDownRelay() 	GPIO_SetBits(GPIOC,GPIO_Pin_5)/*æ‰“å¼€ä¸‹é™æ¶²å‹ç”µç£é˜€*/
 //#define CloseUpRelay() 		GPIO_ResetBits(GPIOC,GPIO_Pin_4)
 //#define CloseDownRelay() 	GPIO_ResetBits(GPIOC,GPIO_Pin_5)
 	GPIO_InitTypeDef GPIO_InitStructure;
