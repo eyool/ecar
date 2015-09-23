@@ -22,7 +22,7 @@ typedef struct _RFID{
 	IDCMD  p_idcmd;
 }RFID;
 typedef struct _SYSSET{
-	INT16S g_offx,g_offy,g_offz,rev;
+	INT16S g_offx,g_offy,a_off,rev;
 	INT16S	 hmc_off;
 	INT16U rfid;
 	INT8U cid;
@@ -232,7 +232,7 @@ typedef struct _SYSSET{
 #define UHFID_FRAME_END   0x8e
 
 #define MOTOR_ZERO_OFF  0x66
-#define MOTOR_TILT_ZERO_OFF  0x18
+#define MOTOR_TILT_ZERO_OFF  0xc
 //函数 
 void SetCenter(void);
 

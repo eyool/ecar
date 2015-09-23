@@ -106,6 +106,7 @@ void  BSP_Init (void)
 	TurnDir=0;
 	IsCenter=0;
 	memcpy((INT8U *)&m_sysset,(INT8U *)SYSSET_ADDR,sizeof(m_sysset));
+	m_sysset.a_off=0;
 	
 	GPIO_Configuration();
 	WIFI_init();
@@ -1017,8 +1018,8 @@ void AdjustMotorSpd(INT8U chl,INT16S dspd,INT16S sspd)
 		//sspd>>=1;
 		sspd=MOTOR_TILT_ZERO_OFF+sspd*(SPDPWM_CLK/SPDPWM_FREQ-MOTOR_TILT_ZERO_OFF)/100;
 		ss=(INT16S)TIM_GetCapture2(SPDPWM_TIM)+dspd;
-		if(ss>0&&ss<MOTOR_ZERO_OFF)
-			ss=dspd>0?MOTOR_ZERO_OFF:0;
+		if(ss>0&&ss<MOTOR_TILT_ZERO_OFF)
+			ss=dspd>0?MOTOR_TILT_ZERO_OFF:0;
 		TIM_SetCompare2(SPDPWM_TIM,ss<0?0:(ss>sspd?sspd:ss)); 
 		break;
 	case MOTOR_RL:	

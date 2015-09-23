@@ -294,9 +294,10 @@ void SensorProc(void)
 	memcpy((void *)&m_sensor[1],(void *)&m_sensor[0],sizeof(SENSOR));
 	//得到霍尔 ，加速度，压力传感器
 	ADXL_GetData((INT8U *)buf,6);
-	abuf[0]=((int)abuf[0]*63>>6)+buf[0];
-	abuf[1]=((int)abuf[1]*63>>6)+buf[1];
-	p_sensor->tilt=GetArc(abuf[0]-(p_ss->g_offx<<6),abuf[1]-(0x100-p_ss->g_offy<<6));	
+	abuf[0]=((int)abuf[0]*127>>7)+buf[0];
+	abuf[1]=((int)abuf[1]*127>>7)+buf[1];
+	//p_sensor->tilt=GetArc(abuf[0]-(p_ss->g_offx<<7),abuf[1]-(0x100-p_ss->g_offy<<7));	
+	p_sensor->tilt=GetArc(abuf[0],abuf[1])-m_sysset.a_off;
 	HMC_GetData((INT8U *)(buf+3),12);
 	hbuf[0]=((int)hbuf[0]*7>>3)+buf[3];
 	hbuf[1]=((int)hbuf[1]*7>>3)+buf[5];	
@@ -305,8 +306,8 @@ void SensorProc(void)
 	hbuf[3]=((int)hbuf[3]*7>>3)+buf[8];		
 	p_sensor->rotation[1]=GetArc(hbuf[2],hbuf[3]);	
 	//------------更新偏移量
-	m_sysset.g_offx=abuf[0]>>6;
-	m_sysset.g_offy=abuf[1]>>6;
+	//m_sysset.g_offx=abuf[0]>>7;
+	//m_sysset.g_offy=abuf[1]>>7;
 	m_sysset.hmc_off=p_sensor->rotation[0]-p_sensor->rotation[1];
 	if(m_sysset.hmc_off>=1800)
 		m_sysset.hmc_off-=3600;
@@ -640,7 +641,7 @@ void RunCmdProc(RFID *p_rfid)
 //	static INT8U n_tilt=0;
 	static IDCMD tilt_ic;
 	static IDCMD const ctilt_ic={0,0,'a',0,10,0};
-	static IDCMD const turn_ic={0,0,'t',0,30,0};
+	static IDCMD const turn_ic={0,0,'t',0,20,0};
 //	static const IDCMD run_ic={.tick=0,.cmd='r',.dis=0,.spd=0};
 	static RFID *lp_rfid=0;
 //	int i;
@@ -850,7 +851,7 @@ void TurnCtrl(IDCMD *p_ic)
     }
 }
 #define TILT_MAX    100
-#define TILT_DT    10
+#define TILT_DT    20
 #define ACT_TIMLONG	8000
 int TiltCtrl(IDCMD *p_ic)
 {
@@ -1067,8 +1068,7 @@ INT8U CheckSelf(void)
 		OSTimeDly(50);
 	if(n)
 		m_car.err&=0xef;	
-	//1
-
+	//1 轮子
 	tmp[0]=m_sensor[0].r_np[0];
 	tmp[1]=m_sensor[0].r_np[1];
 	n=10;
@@ -1083,7 +1083,7 @@ INT8U CheckSelf(void)
 	}
 	SetMotorSpd(MOTOR_RL,0);
 	SetMotorSpd(MOTOR_RR,0);
-	//2
+	//2 旋转
 	tmp[0]=m_sensor[0].t_np;
 	n=10;
 	TurnLeft();
@@ -1095,6 +1095,7 @@ INT8U CheckSelf(void)
 			break;
 		}
 	}
+	//3 旋转中心OK
 	tmp[0]=0;
 	n=500;
 	while(--n&&TURNANGLEMODIFY(m_car.turnangle_np)<CHECK_TA){
@@ -1155,43 +1156,48 @@ INT8U CheckSelf(void)
 		OSTimeDly(100);
 	}
 	SetMotorSpd(MOTOR_TURN,0);
-	//4
+	//4 倾斜
 	tmp[0]=m_sensor[0].tilt;
-	n=20;
-	while(n--){
-		if(tmp[0]<0){
-			CloseDownRelay();
-			OpenUpRelay();
-		}
-		else{
-			CloseUpRelay();
-			OpenDownRelay();
-		}
-		AdjustMotorSpd(MOTOR_TILT,2,13);
-		OSTimeDly(100);
-		if(m_sensor[0].tilt>tmp[0]+(TILT_DT<<1)||tmp[0]>m_sensor[0].tilt+(TILT_DT<<1)){
-			m_car.err&=0xf7;
-			break;
-		}
-	}
-	n=15;
-	while(--n&&m_sensor[0].tilt<-TILT_DT){
+	n=40;
+	while(--n){
 		CloseDownRelay();
 		OpenUpRelay();
-		OSTimeDly(200);
+		AdjustMotorSpd(MOTOR_TILT,2,15);
+		OSTimeDly(100);
+		if(m_sensor[0].tilt!=tmp[0])
+			break;
 	}
-	n=15;
-	while(--n&&m_sensor[0].tilt>TILT_DT){
-		CloseUpRelay();
-		OpenDownRelay();
-		OSTimeDly(200);
+	if(n){
+			n=50;
+			while(--n){
+				OSTimeDly(100);
+				if(GetRelayStatus()){
+					tmp[0]=m_sensor[0].tilt+m_sensor[1].tilt;
+					CloseUpRelay();
+					OpenDownRelay();
+					break;	
+				}
+			}
+			if(n){	
+				n=100;
+				while(--n){
+					OSTimeDly(100);	
+					if(GetRelayStatus()){
+						m_car.err&=0xf7;		
+						m_sysset.a_off=tmp[0]+m_sensor[0].tilt+m_sensor[1].tilt>>2;
+						CloseDownRelay();
+						OpenUpRelay();		
+						n=50;
+						while(--n&&(m_sensor[0].tilt<-TILT_DT||m_sensor[0].tilt>TILT_DT))
+							OSTimeDly(100);						
+						break;				
+					}						
+				}
+			}
 	}
 	SetMotorSpd(MOTOR_TILT,0);	
-	OSTimeDly(1000);		
 	CloseAllRelay();
-
 	//
-
 	return m_car.err;
 }
 INT32U CarGetIn(RFID *p_rfid)
