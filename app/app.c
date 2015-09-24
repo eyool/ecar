@@ -288,14 +288,14 @@ void SensorProc(void)
 //	static INT8U  bn=0;
 	INT16S buf[9]; 
 	SENSOR *p_sensor=&m_sensor[0];
-	SYSSET *p_ss=(SYSSET *)SYSSET_ADDR;
+//	SYSSET *p_ss=(SYSSET *)SYSSET_ADDR;
 	int tmp;
 //	INT8U *bp=(INT8U *)buf; 	
 	memcpy((void *)&m_sensor[1],(void *)&m_sensor[0],sizeof(SENSOR));
 	//得到霍尔 ，加速度，压力传感器
 	ADXL_GetData((INT8U *)buf,6);
-	abuf[0]=((int)abuf[0]*127>>7)+buf[0];
-	abuf[1]=((int)abuf[1]*127>>7)+buf[1];
+	abuf[0]=((int)abuf[0]*31>>5)+buf[0];
+	abuf[1]=((int)abuf[1]*31>>5)+buf[1];
 	//p_sensor->tilt=GetArc(abuf[0]-(p_ss->g_offx<<7),abuf[1]-(0x100-p_ss->g_offy<<7));	
 	p_sensor->tilt=GetArc(abuf[0],abuf[1])-m_sysset.a_off;
 	HMC_GetData((INT8U *)(buf+3),12);
@@ -1164,11 +1164,11 @@ INT8U CheckSelf(void)
 		OpenUpRelay();
 		AdjustMotorSpd(MOTOR_TILT,2,15);
 		OSTimeDly(100);
-		if(m_sensor[0].tilt!=tmp[0])
+		if(m_sensor[0].tilt!=tmp[0]&&n<20)
 			break;
 	}
 	if(n){
-			n=50;
+			n=80;
 			while(--n){
 				OSTimeDly(100);
 				if(GetRelayStatus()){
@@ -1179,7 +1179,7 @@ INT8U CheckSelf(void)
 				}
 			}
 			if(n){	
-				n=100;
+				n=160;
 				while(--n){
 					OSTimeDly(100);	
 					if(GetRelayStatus()){
