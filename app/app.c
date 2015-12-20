@@ -18,6 +18,7 @@ IDCMD m_icmd;
 
 //RFID *p_rfid;
 CAR m_car;
+INT8U n_ct=0;//测试中心霍尔
 //----------
 /*float test(void)
 {
@@ -330,6 +331,7 @@ void SensorProc(void)
 		if(CheckCenter()){
 			p_sensor->b_hall|=B_HALL_C;
 			p_sensor->lastt_np=p_sensor->t_np;
+			n_ct++;
 			//m_car.turnangle_np=0;
 		}
 		else
@@ -359,7 +361,8 @@ void SensorProc(void)
 		else if(m_car.status!=CAR_STATUS_INIT&&OSTimeGet()-lastsendtime>TIMEOV_HEART){
 						Uarttbuf[0]=C_PC_HEART;
 						Uarttbuf[1]=m_car.status;
-						UARTMboxPost(2,NET_CHL_ALL);
+						Uarttbuf[2]=n_ct;			
+						UARTMboxPost(3,NET_CHL_ALL);
 						//NetSend(2,NET_CHL_ALL);//heart
 					}
 	//碰撞检测
@@ -830,24 +833,24 @@ void TurnCtrl(IDCMD *p_ic)
             dspd=SPD_DT_LMT;
         if (dspd<-SPD_DT_LMT) 
             dspd=-SPD_DT_LMT;*/
-		if(!GetTurnBreak())
-			if(sro<(ANGLE_DT<<4))
-				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>8+(sro>>4)?8+(sro>>4):p_ic->spd);
-			else
-				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd);
-			/*if(sro<(ANGLE_DT<<2)) 
-				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>1);
-			else
-				AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd);*/
+				if(!GetTurnBreak())
+					if(sro<(ANGLE_DT<<4))
+						AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>8+(sro>>4)?8+(sro>>4):p_ic->spd);
+					else
+						AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd);
+					/*if(sro<(ANGLE_DT<<2)) 
+						AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd>>1);
+					else
+						AdjustMotorSpd(MOTOR_TURN,1,p_ic->spd);*/
 
-		if(m_sensor[0].turnspeed<ZERO_SPD)
-		{
-			if(dir) 
-				TurnLeft();
-			else
-				TurnRight();
-			CloseTurnBreak();
-		}
+				if(m_sensor[0].turnspeed<ZERO_SPD)
+				{
+					if(dir) 
+						TurnLeft();
+					else
+						TurnRight();
+					CloseTurnBreak();
+				}
     }
 }
 #define TILT_MAX    100
@@ -927,9 +930,9 @@ INT32U GetFrontDis(void)
 	INT32U dis=0xffffffff;
 	int i=0;
 	for (;i<CAR_MAX;i++)
-		if(m_car.allcarid[i]&&m_car.pos<m_car.allcarpos[i]&&dis>m_car.allcarpos[i]-m_car.pos)
+		if(m_car.allcarid[i]&&m_car.pos<m_car.allcarpos[i]&&dis>m_car.allcarpos[i]-m_car.pos)//查前方最近的车
 				dis=m_car.allcarpos[i]-m_car.pos;
-	if(m_car.p_rfid[0]&&dis==0xffffffff&&m_car.p_rfid[0]->area==CAR_AREA_GETON){
+		if(m_car.p_rfid[0]&&dis==0xffffffff&&m_car.p_rfid[0]->area==CAR_AREA_GETON){//如果没查到，再查下上客区是否有车
 		for (i=0;i<CAR_MAX;i++)
 			if(m_car.allcarid[i]&&dis>m_car.allcarpos[i])
 				dis=m_car.allcarpos[i];
@@ -1071,7 +1074,7 @@ INT8U CheckSelf(void)
 	//1 轮子
 	tmp[0]=m_sensor[0].r_np[0];
 	tmp[1]=m_sensor[0].r_np[1];
-	n=10;
+	n=20;
 	while(n--){
 		AdjustMotorSpd(MOTOR_RL,2,20);
 		AdjustMotorSpd(MOTOR_RR,2,20);
@@ -1085,7 +1088,7 @@ INT8U CheckSelf(void)
 	SetMotorSpd(MOTOR_RR,0);
 	//2 旋转
 	tmp[0]=m_sensor[0].t_np;
-	n=10;
+	n=20;
 	TurnLeft();
 	while(n--){
 		AdjustMotorSpd(MOTOR_TURN,2,20);
@@ -1158,8 +1161,8 @@ INT8U CheckSelf(void)
 	SetMotorSpd(MOTOR_TURN,0);
 	//4 倾斜
 	tmp[0]=m_sensor[0].tilt;
-	n=40;
-	while(--n){
+	n=50;
+	while(--n){//检查加速度传感器是否有反应
 		CloseDownRelay();
 		OpenUpRelay();
 		AdjustMotorSpd(MOTOR_TILT,2,15);
@@ -1168,8 +1171,8 @@ INT8U CheckSelf(void)
 			break;
 	}
 	if(n){
-			n=80;
-			while(--n){
+			n=100;
+		while(--n){//检查第一个霍尔位置
 				OSTimeDly(100);
 				if(GetRelayStatus()){
 					tmp[0]=m_sensor[0].tilt+m_sensor[1].tilt;
@@ -1179,16 +1182,16 @@ INT8U CheckSelf(void)
 				}
 			}
 			if(n){	
-				n=160;
-				while(--n){
+				n=200;
+				while(--n){//检查第二个霍尔位置
 					OSTimeDly(100);	
 					if(GetRelayStatus()){
 						m_car.err&=0xf7;		
 						m_sysset.a_off=tmp[0]+m_sensor[0].tilt+m_sensor[1].tilt>>2;
 						CloseDownRelay();
 						OpenUpRelay();		
-						n=50;
-						while(--n&&(m_sensor[0].tilt<-TILT_DT||m_sensor[0].tilt>TILT_DT))
+						n=100;
+						while(--n&&(m_sensor[0].tilt<-TILT_DT||m_sensor[0].tilt>TILT_DT))//回正
 							OSTimeDly(100);						
 						break;				
 					}						
