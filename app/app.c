@@ -361,8 +361,8 @@ void SensorProc(void)
 		else if(m_car.status!=CAR_STATUS_INIT&&OSTimeGet()-lastsendtime>TIMEOV_HEART){
 						Uarttbuf[0]=C_PC_HEART;
 						Uarttbuf[1]=m_car.status;
-						Uarttbuf[2]=n_ct;			
-						UARTMboxPost(3,NET_CHL_ALL);
+						//Uarttbuf[2]=n_ct;			
+						UARTMboxPost(2,NET_CHL_ALL);
 						//NetSend(2,NET_CHL_ALL);//heart
 					}
 	//碰撞检测
@@ -963,7 +963,8 @@ void ReportPos(void)//INT32U pos,INT16U rdif
 //		if(pos-lpos>RP_DP)
 		lpos=m_car.pos;
 		//NetSend(10,NET_CHL_ALL);//rep
-		UARTMboxPost(11,NET_CHL_ALL);
+		Uarttbuf[11]=n_ct;		
+		UARTMboxPost(12,NET_CHL_ALL);
 	}
 }
 
